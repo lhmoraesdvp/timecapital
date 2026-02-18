@@ -1,0 +1,12 @@
+E:\repo\timecapital\src\TimeCapital.Domain\bin\Release\net8.0\TimeCapital.Domain.deps.json
+E:\repo\timecapital\src\TimeCapital.Domain\bin\Release\net8.0\TimeCapital.Domain.dll
+E:\repo\timecapital\src\TimeCapital.Domain\bin\Release\net8.0\TimeCapital.Domain.pdb
+E:\repo\timecapital\src\TimeCapital.Domain\obj\Release\net8.0\TimeCapital.Domain.GeneratedMSBuildEditorConfig.editorconfig
+E:\repo\timecapital\src\TimeCapital.Domain\obj\Release\net8.0\TimeCapital.Domain.AssemblyInfoInputs.cache
+E:\repo\timecapital\src\TimeCapital.Domain\obj\Release\net8.0\TimeCapital.Domain.AssemblyInfo.cs
+E:\repo\timecapital\src\TimeCapital.Domain\obj\Release\net8.0\TimeCapital.Domain.csproj.CoreCompileInputs.cache
+E:\repo\timecapital\src\TimeCapital.Domain\obj\Release\net8.0\TimeCapital.Domain.sourcelink.json
+E:\repo\timecapital\src\TimeCapital.Domain\obj\Release\net8.0\TimeCapital.Domain.dll
+E:\repo\timecapital\src\TimeCapital.Domain\obj\Release\net8.0\refint\TimeCapital.Domain.dll
+E:\repo\timecapital\src\TimeCapital.Domain\obj\Release\net8.0\TimeCapital.Domain.pdb
+E:\repo\timecapital\src\TimeCapital.Domain\obj\Release\net8.0\ref\TimeCapital.Domain.dll

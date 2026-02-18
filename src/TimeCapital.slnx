@@ -1,5 +1,0 @@
-<Solution>
-  <Project Path="TimeCapital.Data/TimeCapital.Data.csproj" />
-  <Project Path="TimeCapital.Domain/TimeCapital.Domain.csproj" />
-  <Project Path="TimeCapital.Web/TimeCapital.Web.csproj" />
-</Solution>
