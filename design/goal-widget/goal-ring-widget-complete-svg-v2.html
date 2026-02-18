@@ -1,0 +1,366 @@
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TimeCapital – Goal Ring Widget (SVG) v2</title>
+
+  <style>
+    :root{
+      /* Ritual / emotional adult */
+      --bg: #fdfcf9;
+      --card: #ffffff;
+      --border: #eceae4;
+
+      --text: #475569;          /* time */
+      --text-strong: #334155;   /* headings */
+      --muted: #94a3b8;         /* secondary */
+
+      --track: #eef2f7;
+
+      /* Palette */
+      --mango: #f47280;
+      --plant: #34d399;
+      --sky:   #60a5fa;
+
+      /* Semantic button tones (within palette family) */
+      --start-main: #34d399;  /* plant */
+      --start-soft: #6ee7b7;
+
+      --pause-main: #f59e0b;  /* mango/amber */
+      --pause-soft: #fbbf24;
+
+      /* Reset */
+      --reset-bg: rgba(148,163,184,0.15);
+
+      --shadow: 0 14px 38px rgba(15, 23, 42, 0.06);
+      --radius: 28px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+      color: var(--text-strong);
+    }
+
+    .widget{
+      width: 380px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 34px 32px 28px;
+      box-shadow: var(--shadow);
+    }
+
+    /* ===== Header ===== */
+    .header{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 18px;
+    }
+
+    /* Dropdown V3c — gradient underline (mango → plant) */
+    .area{
+      flex: 1;
+      min-width: 0;
+    }
+    .area .label{
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .2px;
+      margin-bottom: 8px;
+    }
+
+    .selectV3c{
+      position: relative;
+      padding-bottom: 2px;
+    }
+    .selectV3c select{
+      width:100%;
+      border:none;
+      background:transparent;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-strong);
+      padding: 6px 28px 6px 0;
+      appearance:none;
+      outline:none;
+    }
+    .selectV3c::after{
+      content:"⌄";
+      position:absolute;
+      right:0;
+      bottom: 10px;
+      font-size: 12px;
+      pointer-events:none;
+      background: linear-gradient(135deg, var(--mango), var(--plant));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color: transparent;
+      opacity: .9;
+    }
+    .selectV3c .line{
+      height: 2px;
+      width: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(244,114,128,0.65), rgba(52,211,153,0.55));
+      margin-top: 2px;
+    }
+    .selectV3c:focus-within .line{
+      background: linear-gradient(90deg, rgba(244,114,128,0.82), rgba(52,211,153,0.78));
+    }
+
+    .today{
+      text-align:right;
+      min-width: 84px;
+    }
+    .today .tlabel{
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .today .tvalue{
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-strong);
+    }
+
+    /* ===== Ring ===== */
+    .ringWrap{
+      position: relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin: 44px 0 34px;
+    }
+    .ringWrap svg{
+      width: 300px;
+      height: 300px;
+      display:block;
+    }
+    .track{
+      fill:none;
+      stroke: var(--track);
+      stroke-width: 8;
+    }
+    .progress{
+      fill:none;
+      stroke: url(#grad);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+    .center{
+      position:absolute;
+      text-align:center;
+      pointer-events:none;
+    }
+    .time{
+      font-size: 34px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+    .meta{
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ===== Controls ===== */
+    .controls{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 28px;
+    }
+    .btn{
+      border:none;
+      border-radius: 999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition: transform .18s ease, filter .18s ease, background .25s ease;
+    }
+    .btn:active{ transform: scale(.97); }
+
+    /* Start/Pause semantic */
+    .btnPlay{
+      width: 66px;
+      height: 66px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--start-main), var(--start-soft));
+    }
+    .btnPlay.active{
+      background: linear-gradient(135deg, var(--pause-main), var(--pause-soft));
+    }
+    .btnPlay svg{
+      width: 20px;
+      height: 20px;
+      fill: #fff;
+    }
+
+    /* Reset (discrete) */
+    .btnReset{
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      background: var(--reset-bg);
+    }
+    .btnReset svg{
+      width: 16px;
+      height: 16px;
+      stroke: var(--text-strong);
+      stroke-width: 1.8;
+      fill: none;
+    }
+
+    /* ===== Status ===== */
+    .status{
+      margin-top: 22px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .dot{
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+    .status.on .dot{ background: var(--start-main); opacity:.9; }
+    .status.pause .dot{ background: var(--pause-main); opacity:.9; }
+    .status.on{ color: rgba(52,211,153,0.9); }
+    .status.pause{ color: rgba(245,158,11,0.9); }
+  </style>
+</head>
+
+<body>
+  <div class="widget" role="group" aria-label="Goal Ring Widget">
+
+    <div class="header">
+      <div class="area">
+        <div class="label">Área</div>
+        <div class="selectV3c">
+          <select aria-label="Selecione a área">
+            <option>Selecione área</option>
+            <option>Estudo</option>
+            <option>Trabalho</option>
+            <option>Saúde</option>
+            <option>Projeto pessoal</option>
+          </select>
+          <div class="line"></div>
+        </div>
+      </div>
+
+      <div class="today" aria-label="Resumo de hoje">
+        <div class="tlabel">Hoje</div>
+        <div class="tvalue">1h 20m</div>
+      </div>
+    </div>
+
+    <div class="ringWrap" aria-label="Progresso da meta">
+      <svg viewBox="0 0 300 300" aria-hidden="true">
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f47280"/>
+            <stop offset="100%" stop-color="#34d399"/>
+          </linearGradient>
+        </defs>
+
+        <circle class="track" cx="150" cy="150" r="120"></circle>
+
+        <!-- example: ~40% progress -->
+        <circle class="progress"
+                cx="150" cy="150" r="120"
+                stroke-dasharray="754"
+                stroke-dashoffset="452"></circle>
+      </svg>
+
+      <div class="center">
+        <div class="time" id="timeText">00:25:18</div>
+        <div class="meta">Meta 2h 00m</div>
+      </div>
+    </div>
+
+    <div class="controls" aria-label="Controles">
+      <button class="btn btnPlay" id="btnPlay" aria-label="Iniciar">
+        <svg id="iconPlay" viewBox="0 0 24 24">
+          <polygon points="8,5 19,12 8,19"></polygon>
+        </svg>
+      </button>
+
+      <button class="btn btnReset" id="btnReset" aria-label="Resetar">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 12a8 8 0 1 0 2-5.3"></path>
+          <polyline points="4 4 4 10 10 10"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <div class="status" id="status">
+      <div class="dot"></div>
+      <span id="statusText">Parado</span>
+    </div>
+
+  </div>
+
+  <script>
+    // Minimal UI-only toggle (no timer logic)
+    const btnPlay = document.getElementById('btnPlay');
+    const icon = document.getElementById('iconPlay');
+    const status = document.getElementById('status');
+    const statusText = document.getElementById('statusText');
+
+    let isPlaying = false;
+
+    btnPlay.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+
+      if (isPlaying) {
+        btnPlay.classList.add('active');          // pause colors
+        status.classList.remove('on');
+        status.classList.add('pause');
+        statusText.textContent = 'Pausado';
+        btnPlay.setAttribute('aria-label', 'Pausar');
+        icon.innerHTML = `
+          <rect x="7" y="6" width="3.5" height="12"></rect>
+          <rect x="13.5" y="6" width="3.5" height="12"></rect>
+        `;
+      } else {
+        btnPlay.classList.remove('active');       // start colors
+        status.classList.remove('pause');
+        status.classList.add('on');
+        statusText.textContent = 'Ativo';
+        btnPlay.setAttribute('aria-label', 'Iniciar');
+        icon.innerHTML = `
+          <polygon points="8,5 19,12 8,19"></polygon>
+        `;
+      }
+    });
+
+    // Reset: visual-only (back to stopped)
+    document.getElementById('btnReset').addEventListener('click', () => {
+      isPlaying = false;
+      btnPlay.classList.remove('active');
+      status.classList.remove('on','pause');
+      statusText.textContent = 'Parado';
+      btnPlay.setAttribute('aria-label', 'Iniciar');
+      icon.innerHTML = `<polygon points="8,5 19,12 8,19"></polygon>`;
+    });
+  </script>
+</body>
+</html>
