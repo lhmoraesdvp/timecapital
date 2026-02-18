@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TimeCapital — Design Previews</title>
+
+  <style>
+    :root{
+      --bg: #fdfcf9;
+      --card: #ffffff;
+      --border: #eceae4;
+
+      --text: #475569;
+      --text-strong: #0f172a;
+      --muted: #94a3b8;
+
+      --mango: #f47280;
+      --plant: #34d399;
+      --sky:   #60a5fa;
+
+      --shadow: 0 16px 44px rgba(15, 23, 42, 0.08);
+      --radius: 22px;
+      --radius-sm: 16px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(244,114,128,.10), transparent 60%),
+                  radial-gradient(900px 500px at 90% 20%, rgba(52,211,153,.10), transparent 55%),
+                  var(--bg);
+      color: var(--text-strong);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+    }
+
+    .wrap{
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 48px 20px 64px;
+    }
+
+    header{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 18px;
+      margin-bottom: 26px;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .kicker{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .2px;
+    }
+
+    h1{
+      margin:0;
+      font-size: 30px;
+      line-height: 1.1;
+      letter-spacing: -0.4px;
+      font-weight: 650;
+    }
+
+    .sub{
+      margin: 8px 0 0;
+      color: var(--text);
+      max-width: 62ch;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px;
+      justify-content:flex-end;
+      align-items:center;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(6px);
+      font-size: 12px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .dot{
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--mango), var(--plant));
+      box-shadow: 0 0 0 3px rgba(244,114,128,.10);
+      flex: 0 0 auto;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .card{
+      grid-column: span 6;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position: relative;
+    }
+
+    .cardTop{
+      padding: 18px 18px 0;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 14px;
+    }
+
+    .cardTitle{
+      margin:0;
+      font-size: 16px;
+      font-weight: 650;
+      letter-spacing: -0.2px;
+    }
+
+    .cardDesc{
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .tag{
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: rgba(148,163,184,0.10);
+      white-space: nowrap;
+    }
+
+    .preview{
+      margin: 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(244,114,128,.07), rgba(52,211,153,.06));
+      height: 170px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: rgba(51,65,85,.75);
+      font-size: 12px;
+      position: relative;
+      overflow:hidden;
+    }
+    .preview::after{
+      content:"";
+      position:absolute;
+      inset:-40px;
+      background: radial-gradient(closest-side, rgba(96,165,250,.10), transparent 60%);
+      transform: translate(18%, -10%);
+    }
+
+    .actions{
+      padding: 0 18px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.85);
+      color: var(--text-strong);
+      font-size: 12px;
+      text-decoration:none;
+      transition: transform .15s ease, filter .15s ease;
+      user-select:none;
+    }
+    .btn:hover{ filter: brightness(0.98); transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0px); }
+
+    .btnPrimary{
+      border: none;
+      color: white;
+      background: linear-gradient(135deg, var(--mango), var(--plant));
+      padding: 10px 14px;
+    }
+
+    footer{
+      margin-top: 26px;
+      color: var(--muted);
+      font-size: 12px;
+      display:flex;
+      justify-content:space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 860px){
+      .card{ grid-column: span 12; }
+      header{ align-items:flex-start; flex-direction:column; }
+      .meta{ justify-content:flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="kicker">TimeCapital • Design previews (GitHub Pages)</div>
+        <h1>Versões publicadas do design</h1>
+        <p class="sub">
+          Página estática para validar UI/UX rapidamente. Cada card aponta para um protótipo HTML
+          dentro de <strong>/docs</strong> — ideal para revisões, testes visuais e compartilhamento.
+        </p>
+      </div>
+
+      <div class="meta">
+        <div class="pill"><span class="dot"></span><span id="envText">Ambiente: Pages</span></div>
+        <div class="pill">Build: <span id="buildText">local</span></div>
+        <div class="pill">Atualizado: <span id="updatedText">—</span></div>
+      </div>
+    </header>
+
+    <section class="grid" aria-label="Lista de protótipos">
+      <!-- CARD 1 -->
+      <article class="card">
+        <div class="cardTop">
+          <div>
+            <h2 class="cardTitle">Goal Ring Widget (SVG) — v2</h2>
+            <p class="cardDesc">Dropdown premium + ring + play/pause + reset (estático/visual).</p>
+          </div>
+          <span class="tag">Widget</span>
+        </div>
+
+        <div class="preview" aria-hidden="true">
+          Preview placeholder
+        </div>
+
+        <div class="actions">
+          <a class="btn btnPrimary" href="./widgets/goal-ring-v2.html">Abrir protótipo</a>
+          <a class="btn" href="../">Ver repo</a>
+        </div>
+      </article>
+
+      <!-- CARD 2 (template) -->
+      <article class="card">
+        <div class="cardTop">
+          <div>
+            <h2 class="cardTitle">Template — Próximo protótipo</h2>
+            <p class="cardDesc">Duplique este card e aponte para o novo HTML em /docs/widgets.</p>
+          </div>
+          <span class="tag">Em breve</span>
+        </div>
+
+        <div class="preview" aria-hidden="true">
+          Adicione aqui seu próximo widget
+        </div>
+
+        <div class="actions">
+          <a class="btn" href="./widgets/">Abrir pasta widgets</a>
+          <a class="btn" href="./">Recarregar</a>
+        </div>
+      </article>
+    </section>
+
+    <footer>
+      <span>TimeCapital • demos visuais</span>
+      <span>Dica: publique sempre em <strong>/docs</strong> para manter o app .NET separado em <strong>/src</strong>.</span>
+    </footer>
+  </div>
+
+  <script>
+    // Atualização leve (sem depender de API externa)
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    document.getElementById("updatedText").textContent =
+      `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+    // Você pode trocar manualmente por "dev" / "main" se quiser
+    // (GitHub Pages não expõe commit automaticamente sem workflow)
+    document.getElementById("buildText").textContent = "manual";
+  </script>
+</body>
+</html>
