@@ -1,0 +1,41 @@
+name: Deploy Azure Web App (TimeCapital)
+
+on:
+  push:
+    branches:
+      - dev
+
+env:
+  AZURE_WEBAPP_NAME: SEU-NOME-DO-APP-SERVICE   # ex: timecapital-web
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_PATH: 'src/TimeCapital.Web/TimeCapital.Web.csproj'
+  PUBLISH_DIR: 'publish'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore ${{ env.PROJECT_PATH }}
+
+      - name: Build
+        run: dotnet build ${{ env.PROJECT_PATH }} -c Release --no-restore
+
+      - name: Publish
+        run: dotnet publish ${{ env.PROJECT_PATH }} -c Release -o ${{ env.PUBLISH_DIR }} --no-build
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ${{ env.PUBLISH_DIR }}
