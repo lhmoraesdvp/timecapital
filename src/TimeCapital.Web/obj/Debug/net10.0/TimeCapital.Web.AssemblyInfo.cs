@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TimeCapital.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1ad3fe07dde414749e529898d6b4c7e643cb5530")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d4b46ed5a5c9faa553eb597f033d0cfb8cc8209f")]
 [assembly: System.Reflection.AssemblyProductAttribute("TimeCapital.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TimeCapital.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
