@@ -1,0 +1,35 @@
+name: Deploy TimeCapital.Web to Azure
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "src/**"
+      - ".github/workflows/deploy.yml"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore src/TimeCapital.sln
+
+      - name: Build
+        run: dotnet build src/TimeCapital.sln -c Release --no-restore
+
+      - name: Publish
+        run: dotnet publish src/TimeCapital.Web/TimeCapital.Web.csproj -c Release -o publish
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: "timecapital-web"
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: "./publish"

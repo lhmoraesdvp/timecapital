@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TimeCapital — Dashboard</title>
+
+  <style>
+    :root{
+      /* TimeCapital vibe (leve, adulto, afetivo) */
+      --bg: #fdfcf9;
+      --card: #ffffff;
+      --border: #eceae4;
+
+      --text: #475569;
+      --text-strong: #0f172a;
+      --muted: #94a3b8;
+
+      --track: #eef2f7;
+
+      /* palette */
+      --mango: #f47280;
+      --plant: #34d399;
+      --sky:   #60a5fa;
+
+      /* semantic */
+      --start-main: #34d399;
+      --start-soft: #6ee7b7;
+
+      --pause-main: #f59e0b;
+      --pause-soft: #fbbf24;
+
+      --reset-bg: rgba(148,163,184,0.14);
+
+      --shadow: 0 14px 38px rgba(15, 23, 42, 0.06);
+      --radius: 26px;
+      --radius-sm: 18px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(1100px 560px at 18% -8%, rgba(244,114,128,.12), transparent 58%),
+        radial-gradient(900px 520px at 92% 10%, rgba(52,211,153,.12), transparent 55%),
+        var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+      color: var(--text-strong);
+    }
+
+    .wrap{
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 30px 18px 56px;
+    }
+
+    /* ===== Top bar ===== */
+    .top{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .brand{
+      min-width:0;
+    }
+    .kicker{
+      font-size: 11px;
+      letter-spacing:.2px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    h1{
+      margin:0;
+      font-size: 28px;
+      line-height:1.1;
+      letter-spacing: -0.3px;
+      font-weight: 650;
+    }
+    .subtitle{
+      margin: 8px 0 0;
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.55;
+      max-width: 70ch;
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:flex-end;
+      align-items:center;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(6px);
+      color: var(--text);
+      font-size: 12px;
+      white-space:nowrap;
+    }
+    .chip .dot{
+      width:7px;height:7px;border-radius:50%;
+      background: linear-gradient(135deg, var(--mango), var(--plant));
+      box-shadow: 0 0 0 3px rgba(244,114,128,.10);
+    }
+
+    /* ===== Layout ===== */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.35fr .95fr;
+      gap: 14px;
+      align-items:start;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .pad{ padding: 18px; }
+
+    /* ===== Hero (left) ===== */
+    .hero{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .heroHeader{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 14px;
+      padding: 18px 18px 0;
+    }
+    .heroTitle{
+      margin:0;
+      font-size: 14px;
+      font-weight: 650;
+      letter-spacing: -.15px;
+      color: var(--text-strong);
+    }
+    .heroNote{
+      margin: 6px 0 0;
+      font-size: 12px;
+      color: var(--text);
+      line-height:1.5;
+    }
+    .heroStat{
+      text-align:right;
+      min-width: 160px;
+    }
+    .heroStat .label{
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .heroStat .value{
+      font-size: 26px;
+      font-weight: 650;
+      letter-spacing: -0.3px;
+      color: var(--text-strong);
+    }
+    .heroStat .delta{
+      margin-top: 6px;
+      font-size: 11px;
+      color: rgba(52,211,153,.95);
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .heroStat .delta .miniDot{
+      width:6px;height:6px;border-radius:50%;
+      background: rgba(52,211,153,.95);
+      opacity:.9;
+    }
+
+    /* ===== Widget (Goal Ring v2 inspired, but inside dashboard) ===== */
+    .widgetShell{
+      margin: 0 14px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background:
+        radial-gradient(520px 260px at 20% 0%, rgba(244,114,128,.09), transparent 60%),
+        radial-gradient(520px 260px at 90% 30%, rgba(52,211,153,.08), transparent 60%),
+        #fff;
+      padding: 16px 16px 14px;
+    }
+
+    .wHeader{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 16px;
+    }
+
+    .area{
+      flex:1;
+      min-width: 0;
+    }
+    .area .label{
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .2px;
+      margin-bottom: 8px;
+    }
+
+    /* Dropdown V3c */
+    .selectV3c{
+      position: relative;
+      padding-bottom: 2px;
+    }
+    .selectV3c select{
+      width:100%;
+      border:none;
+      background:transparent;
+      font-size: 16px;
+      font-weight: 520;
+      color: var(--text-strong);
+      padding: 6px 28px 6px 0;
+      appearance:none;
+      outline:none;
+    }
+    .selectV3c::after{
+      content:"⌄";
+      position:absolute;
+      right:0;
+      bottom: 10px;
+      font-size: 12px;
+      pointer-events:none;
+      background: linear-gradient(135deg, var(--mango), var(--plant));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color: transparent;
+      opacity: .9;
+    }
+    .selectV3c .line{
+      height: 2px;
+      width: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(244,114,128,0.55), rgba(52,211,153,0.45));
+      margin-top: 2px;
+    }
+    .selectV3c:focus-within .line{
+      background: linear-gradient(90deg, rgba(244,114,128,0.78), rgba(52,211,153,0.72));
+    }
+
+    .today{
+      text-align:right;
+      min-width: 96px;
+    }
+    .today .tlabel{
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .today .tvalue{
+      font-size: 15px;
+      font-weight: 520;
+      color: var(--text-strong);
+    }
+
+    .ringWrap{
+      position: relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin: 18px 0 14px;
+    }
+    .ringWrap svg{
+      width: 270px;
+      height: 270px;
+      display:block;
+    }
+    .track{
+      fill:none;
+      stroke: var(--track);
+      stroke-width: 8;
+    }
+    .progress{
+      fill:none;
+      stroke: url(#grad);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+    .center{
+      position:absolute;
+      text-align:center;
+      pointer-events:none;
+    }
+    .time{
+      font-size: 34px;
+      font-weight: 520;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+    .meta{
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .controls{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 22px;
+      margin-top: 2px;
+    }
+    .btn{
+      border:none;
+      border-radius: 999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition: transform .18s ease, filter .18s ease, background .25s ease;
+      user-select:none;
+    }
+    .btn:active{ transform: scale(.97); }
+
+    .btnPlay{
+      width: 62px;
+      height: 62px;
+      background: linear-gradient(135deg, var(--start-main), var(--start-soft));
+      box-shadow: 0 12px 26px rgba(52,211,153,.18);
+    }
+    .btnPlay.active{
+      background: linear-gradient(135deg, var(--pause-main), var(--pause-soft));
+      box-shadow: 0 12px 26px rgba(245,158,11,.18);
+    }
+    .btnPlay svg{ width: 20px; height: 20px; fill:#fff; }
+
+    .btnReset{
+      width: 44px;
+      height: 44px;
+      background: var(--reset-bg);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+    .btnReset svg{
+      width: 16px;
+      height: 16px;
+      stroke: var(--text-strong);
+      stroke-width: 1.8;
+      fill: none;
+    }
+
+    .status{
+      margin-top: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .status .dot{
+      width:6px;height:6px;border-radius:50%;
+      background: var(--muted);
+      box-shadow:none;
+    }
+    .status.on{ color: rgba(52,211,153,.90); }
+    .status.on .dot{ background: rgba(52,211,153,.90); }
+    .status.pause{ color: rgba(245,158,11,.90); }
+    .status.pause .dot{ background: rgba(245,158,11,.90); }
+
+    /* ===== Right side (charts) ===== */
+    .side{
+      display:grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 14px;
+    }
+
+    .cardHead{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 16px 16px 10px;
+    }
+    .cardHead h3{
+      margin:0;
+      font-size: 13px;
+      font-weight: 650;
+      letter-spacing:-.15px;
+    }
+    .cardHead .hint{
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .chartPad{ padding: 6px 14px 14px; }
+
+    /* donut legend */
+    .legend{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 10px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text);
+    }
+    .legItem{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .swatch{
+      width:10px;height:10px;border-radius:50%;
+      flex:0 0 auto;
+    }
+    .legName{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .legVal{
+      margin-left:auto;
+      font-weight: 650;
+      color: var(--text-strong);
+    }
+
+    /* sessions list */
+    .list{
+      padding: 8px 14px 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .row{
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background: rgba(248,250,252,.55);
+    }
+    .rowLeft{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width:0;
+    }
+    .badge{
+      width: 34px;
+      height: 34px;
+      border-radius: 14px;
+      flex:0 0 auto;
+      background: rgba(96,165,250,.16);
+      border: 1px solid rgba(96,165,250,.22);
+    }
+    .rowTitle{
+      font-weight:650;
+      font-size: 13px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .rowSub{
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .rowRight{
+      font-weight:650;
+      color: var(--text-strong);
+      font-size: 13px;
+      white-space:nowrap;
+      margin-left: 10px;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+      .chips{ justify-content:flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="kicker">TimeCapital • Dashboard (preview)</div>
+        <h1>Hoje, com carinho: consistência.</h1>
+        <p class="subtitle">Um painel leve para iniciar uma sessão e enxergar seu ritmo. Sem ruído — só direção.</p>
+      </div>
+
+      <div class="chips" aria-label="Resumo rápido">
+        <div class="chip"><span class="dot"></span>Foco: <strong id="chipFocus">Estudo</strong></div>
+        <div class="chip">Semana: <strong id="chipWeekTotal">12h 34m</strong></div>
+        <div class="chip">Atualizado: <strong id="chipUpdated">—</strong></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT: HERO + WIDGET -->
+      <section class="card hero" aria-label="Hero e sessão atual">
+        <div class="heroHeader">
+          <div>
+            <div class="heroTitle">Resumo da sua semana</div>
+            <div class="heroNote">Inicie uma sessão e deixe o anel guiar o progresso. Pequeno, constante, real.</div>
+          </div>
+
+          <div class="heroStat" aria-label="Total semanal">
+            <div class="label">Total da semana</div>
+            <div class="value" id="weekTotal">12h 34m</div>
+            <div class="delta"><span class="miniDot"></span><span id="weekDelta">+2h vs semana passada</span></div>
+          </div>
+        </div>
+
+        <div class="widgetShell" role="group" aria-label="Goal Ring Widget">
+          <div class="wHeader">
+            <div class="area">
+              <div class="label">Área</div>
+              <div class="selectV3c">
+                <select id="areaSelect" aria-label="Selecione a área">
+                  <option value="">Selecione área</option>
+                  <option value="Estudo">Estudo</option>
+                  <option value="Trabalho">Trabalho</option>
+                  <option value="Saúde">Saúde</option>
+                  <option value="Projeto pessoal">Projeto pessoal</option>
+                </select>
+                <div class="line"></div>
+              </div>
+            </div>
+
+            <div class="today" aria-label="Resumo de hoje">
+              <div class="tlabel">Hoje</div>
+              <div class="tvalue" id="todayDone">0h 00m</div>
+            </div>
+          </div>
+
+          <div class="ringWrap" aria-label="Progresso da meta">
+            <svg viewBox="0 0 300 300" aria-hidden="true">
+              <defs>
+                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#f47280"/>
+                  <stop offset="100%" stop-color="#34d399"/>
+                </linearGradient>
+              </defs>
+
+              <circle class="track" cx="150" cy="150" r="120"></circle>
+
+              <circle class="progress"
+                      id="ringProgress"
+                      cx="150" cy="150" r="120"
+                      stroke-dasharray="754"
+                      stroke-dashoffset="754"></circle>
+            </svg>
+
+            <div class="center">
+              <div class="time" id="timeText">00:00:00</div>
+              <div class="meta">Meta <span id="goalText">2h 00m</span></div>
+            </div>
+          </div>
+
+          <div class="controls" aria-label="Controles">
+            <button class="btn btnPlay" id="btnPlay" aria-label="Iniciar" title="Iniciar / Pausar">
+              <svg id="iconPlay" viewBox="0 0 24 24">
+                <polygon points="8,5 19,12 8,19"></polygon>
+              </svg>
+            </button>
+
+            <button class="btn btnReset" id="btnReset" aria-label="Resetar" title="Resetar sessão">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 12a8 8 0 1 0 2-5.3"></path>
+                <polyline points="4 4 4 10 10 10"></polyline>
+              </svg>
+            </button>
+          </div>
+
+          <div class="status" id="status">
+            <div class="dot"></div>
+            <span id="statusText">Parado</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: CHARTS + SESSIONS -->
+      <aside class="side" aria-label="Gráficos e sessões">
+
+        <!-- Donut -->
+        <section class="card" aria-label="Distribuição por área">
+          <div class="cardHead">
+            <h3>Distribuição por área</h3>
+            <div class="hint">Esta semana</div>
+          </div>
+
+          <div class="chartPad">
+            <svg id="donut" viewBox="0 0 240 160" width="100%" height="160" role="img" aria-label="Gráfico de distribuição">
+              <!-- background ring -->
+              <g transform="translate(90,80)">
+                <circle r="46" fill="none" stroke="rgba(226,232,240,.85)" stroke-width="16"></circle>
+
+                <!-- segments (stroke-dasharray) set via JS -->
+                <circle id="seg1" r="46" fill="none" stroke="var(--mango)" stroke-width="16" stroke-linecap="round" transform="rotate(-90)"></circle>
+                <circle id="seg2" r="46" fill="none" stroke="var(--plant)" stroke-width="16" stroke-linecap="round" transform="rotate(-90)"></circle>
+                <circle id="seg3" r="46" fill="none" stroke="var(--sky)"   stroke-width="16" stroke-linecap="round" transform="rotate(-90)"></circle>
+                <circle id="seg4" r="46" fill="none" stroke="rgba(148,163,184,.55)" stroke-width="16" stroke-linecap="round" transform="rotate(-90)"></circle>
+
+                <text x="0" y="-2" text-anchor="middle" font-size="16" font-weight="650" fill="var(--text-strong)" id="donutMain">49%</text>
+                <text x="0" y="16" text-anchor="middle" font-size="11" fill="var(--muted)" id="donutLabel">Estudo</text>
+              </g>
+
+              <!-- right legend block -->
+              <g transform="translate(155,30)">
+                <text x="0" y="0" font-size="11" fill="var(--muted)">Principal</text>
+                <text x="0" y="18" font-size="14" font-weight="650" fill="var(--text-strong)" id="donutFocus">Estudo</text>
+                <text x="0" y="42" font-size="11" fill="var(--muted)">Total</text>
+                <text x="0" y="60" font-size="14" font-weight="650" fill="var(--text-strong)" id="donutTotal">12h 34m</text>
+              </g>
+            </svg>
+
+            <div class="legend" id="legend"></div>
+          </div>
+        </section>
+
+        <!-- Bars -->
+        <section class="card" aria-label="Horas por dia">
+          <div class="cardHead">
+            <h3>Horas por dia</h3>
+            <div class="hint">Últimos 7 dias</div>
+          </div>
+
+          <div class="chartPad">
+            <svg id="bars" viewBox="0 0 340 170" width="100%" height="170" role="img" aria-label="Barras por dia">
+              <!-- grid -->
+              <g opacity=".55" stroke="rgba(148,163,184,.35)" stroke-width="1">
+                <line x1="20" y1="30" x2="330" y2="30"></line>
+                <line x1="20" y1="70" x2="330" y2="70"></line>
+                <line x1="20" y1="110" x2="330" y2="110"></line>
+                <line x1="20" y1="150" x2="330" y2="150"></line>
+              </g>
+
+              <!-- bars group (JS fills) -->
+              <g id="barGroup"></g>
+
+              <!-- x labels -->
+              <g fill="var(--muted)" font-size="10" text-anchor="middle">
+                <text x="45"  y="165">SEG</text>
+                <text x="85"  y="165">TER</text>
+                <text x="125" y="165">QUA</text>
+                <text x="165" y="165">QUI</text>
+                <text x="205" y="165">SEX</text>
+                <text x="245" y="165">SÁB</text>
+                <text x="285" y="165">DOM</text>
+              </g>
+            </svg>
+          </div>
+        </section>
+
+        <!-- Sessions -->
+        <section class="card" aria-label="Últimas sessões">
+          <div class="cardHead">
+            <h3>Últimas sessões</h3>
+            <div class="hint">Hoje</div>
+          </div>
+
+          <div class="list" id="sessionList"></div>
+        </section>
+
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    /* ===============================
+       Dados (mock — substitui por API depois)
+    =============================== */
+    const areas = ["Estudo","Trabalho","Saúde","Projeto pessoal"];
+
+    // metas por área (minutos)
+    const goalsByArea = {
+      "Estudo": 120,
+      "Trabalho": 180,
+      "Saúde": 60,
+      "Projeto pessoal": 90
+    };
+
+    // distribuição semanal (minutos)
+    const weekByArea = {
+      "Estudo":  (6*60 + 10),
+      "Trabalho":(4*60 + 30),
+      "Saúde":   (1*60 + 5),
+      "Projeto pessoal": (0*60 + 49)
+    };
+
+    // barras (horas por dia)
+    const weekHours = [1.2, 0.8, 1.0, 1.1, 3.4, 0.7, 0.4];
+
+    // últimas sessões
+    const sessions = [
+      { area:"Estudo", when:"Hoje", durMin: 135, tone:"mango" },
+      { area:"Trabalho", when:"Hoje", durMin: 70, tone:"plant" },
+      { area:"Projeto pessoal", when:"Hoje", durMin: 35, tone:"sky" },
+      { area:"Saúde", when:"Hoje", durMin: 30, tone:"muted" }
+    ];
+
+    /* ===============================
+       Helpers
+    =============================== */
+    const clamp01 = (x)=> Math.max(0, Math.min(1, x));
+    const pad2 = (n)=> String(n).padStart(2,"0");
+
+    const minutesToText = (min)=>{
+      const h = Math.floor(min/60);
+      const m = min % 60;
+      return `${h}h ${pad2(m)}m`;
+    };
+
+    const secondsToHMS = (sec)=>{
+      const h = Math.floor(sec/3600);
+      const m = Math.floor((sec%3600)/60);
+      const s = sec%60;
+      return `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+    };
+
+    const sumMinutes = (obj)=> Object.values(obj).reduce((a,b)=>a+b,0);
+
+    /* ===============================
+       Chips / header
+    =============================== */
+    const now = new Date();
+    document.getElementById("chipUpdated").textContent =
+      `${pad2(now.getDate())}/${pad2(now.getMonth()+1)}/${now.getFullYear()} ${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+
+    const weekTotalMin = sumMinutes(weekByArea);
+    const weekTotalText = minutesToText(weekTotalMin);
+    document.getElementById("weekTotal").textContent = weekTotalText;
+    document.getElementById("chipWeekTotal").textContent = weekTotalText;
+
+    /* ===============================
+       Donut (SVG strokes)
+    =============================== */
+    function renderDonut(){
+      const total = weekTotalMin || 1;
+
+      const values = areas.map(a => weekByArea[a] || 0);
+      const perc = values.map(v => v/total);
+
+      // focus = maior
+      let maxIdx = 0;
+      for(let i=1;i<values.length;i++) if(values[i] > values[maxIdx]) maxIdx = i;
+
+      const focusArea = areas[maxIdx];
+      document.getElementById("donutMain").textContent = `${Math.round(perc[maxIdx]*100)}%`;
+      document.getElementById("donutLabel").textContent = focusArea;
+      document.getElementById("donutFocus").textContent = focusArea;
+      document.getElementById("donutTotal").textContent = weekTotalText;
+      document.getElementById("chipFocus").textContent = focusArea;
+
+      const r = 46;
+      const c = 2 * Math.PI * r;
+
+      // “recorta” em segments com offsets acumulados
+      const segs = [
+        document.getElementById("seg1"),
+        document.getElementById("seg2"),
+        document.getElementById("seg3"),
+        document.getElementById("seg4")
+      ];
+
+      let acc = 0;
+      for(let i=0;i<4;i++){
+        const len = c * perc[i];
+        // dasharray = len + resto; dashoffset = c*(1-acc)
+        segs[i].setAttribute("stroke-dasharray", `${len} ${c-len}`);
+        segs[i].setAttribute("stroke-dashoffset", `${c * (1-acc)}`);
+        acc += perc[i];
+      }
+
+      // legend
+      const colors = ["var(--mango)","var(--plant)","var(--sky)","rgba(148,163,184,.55)"];
+      const legend = document.getElementById("legend");
+      legend.innerHTML = "";
+      for(let i=0;i<4;i++){
+        const p = Math.round(perc[i]*100);
+        const item = document.createElement("div");
+        item.className = "legItem";
+        item.innerHTML = `
+          <span class="swatch" style="background:${colors[i]}"></span>
+          <span class="legName">${areas[i]}</span>
+          <span class="legVal">${p}%</span>
+        `;
+        legend.appendChild(item);
+      }
+    }
+    renderDonut();
+
+    /* ===============================
+       Bars (SVG rects)
+    =============================== */
+    function renderBars(){
+      const max = Math.max(...weekHours, 1);
+      const g = document.getElementById("barGroup");
+      g.innerHTML = "";
+
+      const x = [35, 75, 115, 155, 195, 235, 275];
+      const baseY = 150;
+      const maxH = 110;
+      const w = 22;
+
+      // subtle gradient per bar (mango->plant)
+      const svg = document.getElementById("bars");
+      if(!document.getElementById("barGrad")){
+        const defs = document.createElementNS("http://www.w3.org/2000/svg","defs");
+        defs.innerHTML = `
+          <linearGradient id="barGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="rgba(244,114,128,.92)"></stop>
+            <stop offset="100%" stop-color="rgba(52,211,153,.82)"></stop>
+          </linearGradient>
+        `;
+        svg.insertBefore(defs, svg.firstChild);
+      }
+
+      weekHours.forEach((v,i)=>{
+        const h = Math.round((v/max) * maxH);
+        const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
+        rect.setAttribute("x", x[i]);
+        rect.setAttribute("y", baseY - h);
+        rect.setAttribute("width", w);
+        rect.setAttribute("height", h);
+        rect.setAttribute("rx", "10");
+        rect.setAttribute("fill", "url(#barGrad)");
+        rect.setAttribute("opacity", "0.92");
+
+        // tooltip nativo
+        const title = document.createElementNS("http://www.w3.org/2000/svg","title");
+        title.textContent = `${v.toFixed(1)}h`;
+        rect.appendChild(title);
+
+        g.appendChild(rect);
+      });
+    }
+    renderBars();
+
+    /* ===============================
+       Sessions list
+    =============================== */
+    function toneStyle(tone){
+      if(tone === "mango") return { bg:"rgba(244,114,128,.16)", br:"rgba(244,114,128,.22)" };
+      if(tone === "plant") return { bg:"rgba(52,211,153,.16)", br:"rgba(52,211,153,.22)" };
+      if(tone === "sky")   return { bg:"rgba(96,165,250,.16)", br:"rgba(96,165,250,.22)" };
+      return { bg:"rgba(148,163,184,.14)", br:"rgba(148,163,184,.20)" };
+    }
+
+    function renderSessions(){
+      const host = document.getElementById("sessionList");
+      host.innerHTML = "";
+      sessions.forEach(s=>{
+        const st = toneStyle(s.tone);
+        const row = document.createElement("div");
+        row.className = "row";
+        row.innerHTML = `
+          <div class="rowLeft">
+            <span class="badge" style="background:${st.bg}; border-color:${st.br};"></span>
+            <div style="min-width:0;">
+              <div class="rowTitle">${s.area}</div>
+              <div class="rowSub">${s.when}</div>
+            </div>
+          </div>
+          <div class="rowRight">${minutesToText(s.durMin)}</div>
+        `;
+        host.appendChild(row);
+      });
+    }
+    renderSessions();
+
+    /* ===============================
+       Goal Ring + timer logic
+    =============================== */
+    const areaSelect = document.getElementById("areaSelect");
+    const timeText = document.getElementById("timeText");
+    const goalText = document.getElementById("goalText");
+    const todayDone = document.getElementById("todayDone");
+
+    const ring = document.getElementById("ringProgress");
+    const CIRC = 754; // matching stroke-dasharray
+
+    const btnPlay = document.getElementById("btnPlay");
+    const btnReset = document.getElementById("btnReset");
+    const icon = document.getElementById("iconPlay");
+
+    const status = document.getElementById("status");
+    const statusText = document.getElementById("statusText");
+
+    let isPlaying = false;
+    let tick = null;
+
+    // sessão atual
+    let selectedArea = "";
+    let goalMinutes = 120;
+    let elapsedSeconds = 0;
+
+    // “hoje” (mock) por área — pode virar storage/api depois
+    const todayByAreaMin = {
+      "Estudo": 0,
+      "Trabalho": 0,
+      "Saúde": 0,
+      "Projeto pessoal": 0
+    };
+
+    function setStatus(mode){
+      status.classList.remove("on","pause");
+      if(mode === "on"){ status.classList.add("on"); statusText.textContent = "Ativo"; }
+      else if(mode === "pause"){ status.classList.add("pause"); statusText.textContent = "Pausado"; }
+      else { statusText.textContent = "Parado"; }
+    }
+
+    function updateRing(){
+      const doneMin = todayByAreaMin[selectedArea] || 0;
+      const sessionMin = Math.floor(elapsedSeconds / 60);
+      const totalDone = doneMin + sessionMin;
+
+      todayDone.textContent = minutesToText(totalDone);
+
+      const p = clamp01(totalDone / Math.max(goalMinutes, 1));
+      ring.setAttribute("stroke-dashoffset", String(CIRC * (1 - p)));
+    }
+
+    function updateTime(){
+      timeText.textContent = secondsToHMS(elapsedSeconds);
+    }
+
+    function setGoalFromArea(a){
+      goalMinutes = goalsByArea[a] ?? 120;
+      goalText.textContent = minutesToText(goalMinutes);
+      updateRing();
+    }
+
+    function start(){
+      if(!selectedArea) return;
+      isPlaying = true;
+      btnPlay.classList.add("active");
+      setStatus("on");
+      btnPlay.setAttribute("aria-label","Pausar");
+      icon.innerHTML = `
+        <rect x="7" y="6" width="3.5" height="12"></rect>
+        <rect x="13.5" y="6" width="3.5" height="12"></rect>
+      `;
+
+      if(tick) clearInterval(tick);
+      tick = setInterval(()=>{
+        elapsedSeconds++;
+        updateTime();
+        // atualiza ring “suave” a cada segundo (minutos via floor)
+        updateRing();
+      }, 1000);
+    }
+
+    function pause(){
+      isPlaying = false;
+      btnPlay.classList.remove("active");
+      setStatus("pause");
+      btnPlay.setAttribute("aria-label","Retomar");
+      icon.innerHTML = `<polygon points="8,5 19,12 8,19"></polygon>`;
+      if(tick) clearInterval(tick);
+      tick = null;
+    }
+
+    function reset(){
+      if(tick) clearInterval(tick);
+      tick = null;
+      isPlaying = false;
+      elapsedSeconds = 0;
+      updateTime();
+
+      btnPlay.classList.remove("active");
+      setStatus("stop");
+      btnPlay.setAttribute("aria-label","Iniciar");
+      icon.innerHTML = `<polygon points="8,5 19,12 8,19"></polygon>`;
+
+      // volta anel pro estado do “já feito hoje” (sem sessão atual)
+      updateRing();
+    }
+
+    areaSelect.addEventListener("change", ()=>{
+      selectedArea = areaSelect.value;
+      if(!selectedArea){
+        reset();
+        todayDone.textContent = "0h 00m";
+        ring.setAttribute("stroke-dashoffset", String(CIRC));
+        return;
+      }
+      setGoalFromArea(selectedArea);
+      reset();
+    });
+
+    btnPlay.addEventListener("click", ()=>{
+      if(!selectedArea) return;
+      if(isPlaying) pause();
+      else start();
+    });
+
+    btnReset.addEventListener("click", ()=>{
+      reset();
+    });
+
+    // inicia “pronto” com Estudo selecionado (sensação de "iniciando")
+    areaSelect.value = "Estudo";
+    areaSelect.dispatchEvent(new Event("change"));
+  </script>
+</body>
+</html>
