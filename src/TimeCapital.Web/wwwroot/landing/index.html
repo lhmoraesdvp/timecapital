@@ -529,12 +529,8 @@
             <div class="area">
               <div class="label">Área</div>
               <div class="selectV3c">
-                <select id="areaSelect" aria-label="Selecione a área">
-                  <option value="">Selecione área</option>
-                  <option value="Estudo">Estudo</option>
-                  <option value="Trabalho">Trabalho</option>
-                  <option value="Saúde">Saúde</option>
-                  <option value="Projeto pessoal">Projeto pessoal</option>
+               <select id="areaSelect" aria-label="Selecione a área">
+             <option value="">Carregando...</option>
                 </select>
                 <div class="line"></div>
               </div>
@@ -1018,3 +1014,22 @@
   </script>
 </body>
 </html>
+<script>
+ 
+  async function loadAreas() {
+    const sel = document.getElementById('areaSelect');
+    sel.innerHTML = '<option value="">Selecione área</option>';
+
+    const res = await fetch('/api/areas');
+    const data = await res.json();
+
+    for (const a of data) {
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = a.name;
+      sel.appendChild(opt);
+    }
+  }
+
+  loadAreas();
+</script>

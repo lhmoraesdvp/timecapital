@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Routing.Patterns;
 using Microsoft.EntityFrameworkCore;
 using TimeCapital.Data;
 using TimeCapital.Web.Security;
@@ -26,7 +28,18 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapGet("/_routes", (IEnumerable<EndpointDataSource> sources) =>
+{
+    var endpoints = sources
+        .SelectMany(s => s.Endpoints)
+        .Select(e => e.DisplayName);
+
+    return Results.Ok(endpoints);
+});
+
 app.MapGet("/", () => Results.Redirect("/landing/index.html"));
+app.MapControllers(); // ✅ ADICIONE ISTO
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
