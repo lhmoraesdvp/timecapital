@@ -1,10 +1,13 @@
+using System;
+
 namespace TimeCapital.Domain.Entities;
 
 public class Goal
 {
-    public int Id { get; set; }
-    public int TargetMinutes { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
 
-    public int AreaId { get; set; }
-    public Area? Area { get; set; }
+    public Guid ProjectId { get; set; }
+    public Project Project { get; set; } = null!;
+
+    public int TargetMinutes { get; set; }
 }

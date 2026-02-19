@@ -1,18 +1,23 @@
-using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.Routing.Patterns;
 using Microsoft.EntityFrameworkCore;
+using TimeCapital.Application.Sessions;
 using TimeCapital.Data;
-using TimeCapital.Web.Security;
+using TimeCapital.Web.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
+// MVC
 builder.Services.AddControllersWithViews();
 
+// DbContext (ajuste o nome da connection string se o seu for diferente)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDefaultIdentity<Microsoft.AspNetCore.Identity.IdentityUser>()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
-builder.Services.AddScoped<ICurrentUser, MockCurrentUser>();
+// Application Services
+builder.Services.AddScoped<ISessionService, SessionService>();
+
+// Dev user (sem Identity por enquanto)
+builder.Services.AddScoped<IUserContext, DevUserContext>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -26,24 +31,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapGet("/_routes", (IEnumerable<EndpointDataSource> sources) =>
-{
-    var endpoints = sources
-        .SelectMany(s => s.Endpoints)
-        .Select(e => e.DisplayName);
-
-    return Results.Ok(endpoints);
-});
-
-app.MapGet("/", () => Results.Redirect("/landing/index.html"));
-app.MapControllers(); // ✅ ADICIONE ISTO
+// sem auth por enquanto
+// app.UseAuthentication();
+// app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-app.MapRazorPages();
 
 app.Run();

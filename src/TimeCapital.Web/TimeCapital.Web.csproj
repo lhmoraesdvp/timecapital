@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\TimeCapital.Domain\TimeCapital.Domain.csproj" />
     <ProjectReference Include="..\TimeCapital.Data\TimeCapital.Data.csproj" />
+    <ProjectReference Include="..\TimeCapital.Application\TimeCapital.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

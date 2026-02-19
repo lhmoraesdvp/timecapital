@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeCapital.Data", "TimeCap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeCapital.Web", "TimeCapital.Web\TimeCapital.Web.csproj", "{2F806A23-B3AA-4AB1-88E1-9026C59811D9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeCapital.Application", "TimeCapital.Application\TimeCapital.Application.csproj", "{1C525858-E121-4FF7-B80F-85AD64DEBBDF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{2F806A23-B3AA-4AB1-88E1-9026C59811D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F806A23-B3AA-4AB1-88E1-9026C59811D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F806A23-B3AA-4AB1-88E1-9026C59811D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C525858-E121-4FF7-B80F-85AD64DEBBDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C525858-E121-4FF7-B80F-85AD64DEBBDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C525858-E121-4FF7-B80F-85AD64DEBBDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C525858-E121-4FF7-B80F-85AD64DEBBDF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

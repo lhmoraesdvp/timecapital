@@ -134,11 +134,6 @@ E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\TimeCapital.Web.RazorAs
 E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\TimeCapital.Web.sourcelink.json
 E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\staticwebassets.build.json
 E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\staticwebassets.development.json
-E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\staticwebassets\msbuild.TimeCapital.Web.Microsoft.AspNetCore.StaticWebAssets.props
-E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\staticwebassets\msbuild.build.TimeCapital.Web.props
-E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.TimeCapital.Web.props
-E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.TimeCapital.Web.props
-E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\staticwebassets.pack.json
 E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\scopedcss\bundle\TimeCapital.Web.styles.css
 E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\scopedcss\projectbundle\TimeCapital.Web.bundle.scp.css
@@ -148,3 +143,10 @@ E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\refint\TimeCapital.Web.
 E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\TimeCapital.Web.pdb
 E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\TimeCapital.Web.genruntimeconfig.cache
 E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\ref\TimeCapital.Web.dll
+E:\repo\timecapital\src\TimeCapital.Web\bin\Debug\net8.0\TimeCapital.Application.dll
+E:\repo\timecapital\src\TimeCapital.Web\bin\Debug\net8.0\TimeCapital.Application.pdb
+E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\staticwebassets\msbuild.TimeCapital.Web.Microsoft.AspNetCore.StaticWebAssets.props
+E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\staticwebassets\msbuild.build.TimeCapital.Web.props
+E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.TimeCapital.Web.props
+E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.TimeCapital.Web.props
+E:\repo\timecapital\src\TimeCapital.Web\obj\Debug\net8.0\staticwebassets.pack.json

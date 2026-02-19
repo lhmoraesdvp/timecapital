@@ -1,11 +1,21 @@
+using System;
+
 namespace TimeCapital.Domain.Entities;
 
 public class Session
 {
-    public int Id { get; set; }
-    public DateTime StartTime { get; set; }
-    public int DurationMinutes { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
 
-    public int AreaId { get; set; }
-    public Area? Area { get; set; }
+    public Guid ProjectId { get; set; }
+    public Project Project { get; set; } = null!;
+
+    public Guid? GoalId { get; set; }
+    public Goal? Goal { get; set; }
+
+    public string UserId { get; set; } = null!;
+
+    public DateTimeOffset StartTimeUtc { get; set; }
+    public DateTimeOffset? EndTimeUtc { get; set; }
+
+    public DateTimeOffset? CanceledAtUtc { get; set; }
 }
