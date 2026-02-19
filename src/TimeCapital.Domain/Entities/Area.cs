@@ -1,9 +1,20 @@
 namespace TimeCapital.Domain.Entities;
 
-public class Area
+public sealed class Area
 {
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
+    public Guid Id { get; set; } = Guid.NewGuid();
 
-    public ICollection<Session> Sessions { get; set; } = new List<Session>();
+    public string UserId { get; set; } = default!;
+
+    public string Name { get; set; } = default!;
+    public string NormalizedName { get; set; } = default!;
+
+    public string? Color { get; set; }
+    public bool IsArchived { get; set; } = false;
+
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+
+    public static string NormalizeName(string name)
+        => string.Join(' ', (name ?? "").Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            .ToUpperInvariant();
 }

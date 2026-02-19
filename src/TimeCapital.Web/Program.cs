@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TimeCapital.Data;
-
+using TimeCapital.Web.Security;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
@@ -10,7 +10,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDefaultIdentity<Microsoft.AspNetCore.Identity.IdentityUser>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
-
+builder.Services.AddScoped<ICurrentUser, MockCurrentUser>();
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
