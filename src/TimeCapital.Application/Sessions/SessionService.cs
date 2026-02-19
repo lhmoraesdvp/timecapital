@@ -2,11 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using TimeCapital.Data;
 using TimeCapital.Domain.Entities;
 
-
 namespace TimeCapital.Application.Sessions;
 
 public sealed class SessionService : ISessionService
-
 {
     private readonly ApplicationDbContext _db;
 
@@ -24,7 +22,6 @@ public sealed class SessionService : ISessionService
         Guid? goalId,
         CancellationToken ct = default)
     {
-        // projeto pertence ao usuário?
         var project = await _db.Projects
             .Where(p => p.Id == projectId && p.OwnerId == userId)
             .SingleOrDefaultAsync(ct);
@@ -32,17 +29,6 @@ public sealed class SessionService : ISessionService
         if (project == null)
             throw new InvalidOperationException("Projeto inválido.");
 
-        // se goal informado, apenas validar que pertence ao projeto
-        if (goalId.HasValue)
-        {
-            var goalOk = await _db.Goals
-                .AnyAsync(g => g.Id == goalId.Value && g.ProjectId == projectId, ct);
-
-            if (!goalOk)
-                throw new InvalidOperationException("Goal inválido.");
-        }
-
-        // já existe sessão ativa?
         var hasActive = await _db.Sessions
             .AnyAsync(s => s.UserId == userId &&
                            s.EndTimeUtc == null &&
@@ -51,15 +37,13 @@ public sealed class SessionService : ISessionService
         if (hasActive)
             throw new InvalidOperationException("Já existe sessão ativa.");
 
-        var now = DateTimeOffset.UtcNow;
-
         var session = new Session
         {
             Id = Guid.NewGuid(),
             UserId = userId,
             ProjectId = projectId,
             GoalId = goalId,
-            StartTimeUtc = now
+            StartTimeUtc = DateTimeOffset.UtcNow
         };
 
         _db.Sessions.Add(session);
@@ -87,13 +71,9 @@ public sealed class SessionService : ISessionService
         active.EndTimeUtc = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync(ct);
 
-        var durationSeconds = await _db.Sessions
-            .Where(s => s.Id == active.Id)
-            .Select(s =>
-                EF.Functions.DateDiffSecond(
-                    s.StartTimeUtc,
-                    s.EndTimeUtc!.Value))
-            .SingleAsync(ct);
+        var durationSeconds = EF.Functions.DateDiffSecond(
+            active.StartTimeUtc,
+            active.EndTimeUtc!.Value);
 
         return new StopSessionResponse(
             active.Id,
@@ -123,7 +103,7 @@ public sealed class SessionService : ISessionService
     }
 
     // =========================
-    // DASHBOARD STATE
+    // DASHBOARD
     // =========================
     public async Task<DashboardStateDto> GetDashboardStateAsync(
         string userId,
@@ -140,6 +120,16 @@ public sealed class SessionService : ISessionService
             .Where(u => u.Id == userId)
             .Select(u => u.DefaultProjectId)
             .SingleAsync(ct);
+
+        string? defaultProjectTitle = null;
+
+        if (defaultProjectId.HasValue)
+        {
+            defaultProjectTitle = await _db.Projects
+                .Where(p => p.Id == defaultProjectId.Value)
+                .Select(p => p.Title)
+                .SingleOrDefaultAsync(ct);
+        }
 
         var projects = await _db.Projects
             .Where(p => p.OwnerId == userId)
@@ -163,21 +153,25 @@ public sealed class SessionService : ISessionService
                         s.EndTimeUtc != null &&
                         s.CanceledAtUtc == null);
 
-        var todayTotal = await completed
+        // Totais globais
+        var globalToday = await completed
             .Where(s => s.StartTimeUtc >= todayStart)
             .SumAsync(s =>
                 EF.Functions.DateDiffSecond(
                     s.StartTimeUtc,
                     s.EndTimeUtc!.Value), ct);
 
-        var weekTotal = await completed
+        var globalWeek = await completed
             .Where(s => s.StartTimeUtc >= weekStart)
             .SumAsync(s =>
                 EF.Functions.DateDiffSecond(
                     s.StartTimeUtc,
                     s.EndTimeUtc!.Value), ct);
 
-        var defaultProjectTotal = 0;
+        int defaultProjectTotal = 0;
+        int projectTodayTotal = 0;
+        int projectWeekTotal = 0;
+
         if (defaultProjectId.HasValue)
         {
             defaultProjectTotal = await completed
@@ -186,15 +180,25 @@ public sealed class SessionService : ISessionService
                     EF.Functions.DateDiffSecond(
                         s.StartTimeUtc,
                         s.EndTimeUtc!.Value), ct);
+
+            projectTodayTotal = await completed
+                .Where(s => s.ProjectId == defaultProjectId.Value &&
+                            s.StartTimeUtc >= todayStart)
+                .SumAsync(s =>
+                    EF.Functions.DateDiffSecond(
+                        s.StartTimeUtc,
+                        s.EndTimeUtc!.Value), ct);
+
+            projectWeekTotal = await completed
+                .Where(s => s.ProjectId == defaultProjectId.Value &&
+                            s.StartTimeUtc >= weekStart)
+                .SumAsync(s =>
+                    EF.Functions.DateDiffSecond(
+                        s.StartTimeUtc,
+                        s.EndTimeUtc!.Value), ct);
         }
 
-        // últimas sessões (fallback se não houver default)
-        IQueryable<Session> lastQuery = completed;
-
-        if (defaultProjectId.HasValue)
-            lastQuery = lastQuery.Where(s => s.ProjectId == defaultProjectId.Value);
-
-        var lastSessions = await lastQuery
+        var lastSessions = await completed
             .OrderByDescending(s => s.EndTimeUtc)
             .Take(10)
             .Join(_db.Projects,
@@ -212,28 +216,18 @@ public sealed class SessionService : ISessionService
                         s.EndTimeUtc!.Value)
                 ))
             .ToListAsync(ct);
-string? defaultProjectTitle = null;
 
-if (defaultProjectId.HasValue)
-{
-    defaultProjectTitle = await _db.Projects
-        .Where(p => p.Id == defaultProjectId.Value)
-        .Select(p => p.Title)
-        .SingleOrDefaultAsync(ct);
-}
-
-    return new DashboardStateDto(
-    defaultProjectId,
-    defaultProjectTitle,
-    projects,
-    active,
-    defaultProjectTotal,
-    todayTotal,
-    weekTotal,
-    null,
-    lastSessions,
-    new List<ProjectTotalDto>() // <-- ESTE É O QUE ESTÁ FALTANDO
-);
-
+        return new DashboardStateDto(
+            defaultProjectId,
+            defaultProjectTitle,
+            projects,
+            active,
+            defaultProjectTotal,
+            projectTodayTotal,
+            projectWeekTotal,
+            null,
+            lastSessions,
+            new List<ProjectTotalDto>()
+        );
     }
 }

@@ -403,6 +403,41 @@
       justify-content:space-between;
       align-items:center;
       background: rgba(248,250,252,.55);
+      gap: 12px;
+    }
+    .rowLeft{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width:0;
+    }
+    .badge{
+      width: 34px;
+      height: 34px;
+      border-radius: 14px;
+      flex:0 0 auto;
+      background: rgba(96,165,250,.16);
+      border: 1px solid rgba(96,165,250,.22);
+    }
+    .rowTitle{
+      font-weight:650;
+      font-size: 13px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      color: var(--text-strong);
+    }
+    .rowSub{
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .rowRight{
+      font-weight:650;
+      color: var(--text-strong);
+      font-size: 13px;
+      white-space:nowrap;
+      margin-left: 10px;
     }
 
     .alert{
@@ -449,8 +484,8 @@
             <div class="heroNote">Start/Stop/Cancel + cronômetro reconstituído pelo backend.</div>
           </div>
 
-          <div class="heroStat" aria-label="Total semanal (mock)">
-            <div class="label">Total (mock)</div>
+          <div class="heroStat" aria-label="Total semanal">
+            <div class="label">Semana</div>
             <div class="value" id="weekTotal">—</div>
             <div class="delta"><span class="miniDot"></span><span id="weekDelta">—</span></div>
           </div>
@@ -468,8 +503,8 @@
               </div>
             </div>
 
-            <div class="today" aria-label="Estado">
-              <div class="tlabel">Estado</div>
+            <div class="today" aria-label="Hoje">
+              <div class="tlabel">Hoje</div>
               <div class="tvalue" id="todayDone">—</div>
             </div>
           </div>
@@ -512,7 +547,7 @@
         </div>
       </section>
 
-      <!-- RIGHT (mock, mantém espaço) -->
+      <!-- RIGHT -->
       <aside class="side" aria-label="Painéis (mock)">
         <section class="card" aria-label="Mock 1">
           <div class="cardHead">
@@ -520,7 +555,7 @@
             <div class="hint">Esta semana</div>
           </div>
           <div class="chartPad">
-            <div class="alert">Ainda mockado. O foco aqui é cronômetro persistente (Passo 5).</div>
+            <div class="alert">Ainda mockado. O foco aqui é cronômetro persistente.</div>
           </div>
         </section>
 
@@ -534,15 +569,13 @@
           </div>
         </section>
 
-      <section class="card" aria-label="Últimas sessões">
-  <div class="cardHead">
-    <h3>Últimas sessões</h3>
-    <div class="hint">Projeto padrão</div>
-  </div>
-
-  <div class="list" id="sessionList"></div>
-</section>
-
+        <section class="card" aria-label="Últimas sessões">
+          <div class="cardHead">
+            <h3>Últimas sessões</h3>
+            <div class="hint">Projeto padrão</div>
+          </div>
+          <div class="list" id="sessionList"></div>
+        </section>
       </aside>
     </div>
   </div>
@@ -556,6 +589,7 @@
     btnCancel: document.getElementById('btnCancel'),
 
     timeText: document.getElementById('timeText'),
+    sessionStatus: document.getElementById('sessionStatus'),
     statusText: document.getElementById('statusText'),
     status: document.getElementById('status'),
 
@@ -564,6 +598,7 @@
     chipUpdated: document.getElementById('chipUpdated'),
 
     weekTotal: document.getElementById('weekTotal'),
+    weekDelta: document.getElementById('weekDelta'),
     todayDone: document.getElementById('todayDone'),
 
     sessionList: document.getElementById('sessionList'),
@@ -574,7 +609,7 @@
 
   const CIRC = 754;
 
-  // ===== Timer persistente (StartTimeUtc source-of-truth) =====
+  // ===== Timer persistente =====
   let timer = { intervalId: null, startUtcMs: null };
 
   const pad2 = (n) => String(n).padStart(2, '0');
@@ -631,15 +666,16 @@
   }
 
   function setStatus(mode){
-    // mode: "on" | "stop"
     if (!els.status || !els.statusText) return;
-    els.status.classList.remove('on','pause','stop');
+    els.status.classList.remove('on','stop');
     if (mode === 'on') {
       els.status.classList.add('on');
       els.statusText.textContent = 'Ativo';
+      if (els.sessionStatus) els.sessionStatus.textContent = 'Sessão ativa';
     } else {
       els.status.classList.add('stop');
       els.statusText.textContent = 'Parado';
+      if (els.sessionStatus) els.sessionStatus.textContent = 'Parado';
     }
   }
 
@@ -656,11 +692,12 @@
     if (els.btnCancel) els.btnCancel.disabled = isLoading;
   }
 
-  // ===== API =====
+  // ===== API (safe for empty response body / 204) =====
   async function handleResponse(res) {
-    const text = await res.text();
+    const text = await res.text(); // pode vir vazio (204)
     let data = null;
     try { data = text ? JSON.parse(text) : null; } catch {}
+
     if (!res.ok) {
       const msg = data?.message || text || `Erro HTTP ${res.status}`;
       throw new Error(msg);
@@ -677,7 +714,7 @@
     const res = await fetch(url, {
       method:'POST',
       headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body: bodyObj ? JSON.stringify(bodyObj) : '{}'
+      body: bodyObj ? JSON.stringify(bodyObj) : '{}' // mantém compatível
     });
     return handleResponse(res);
   }
@@ -691,7 +728,7 @@
   function renderProjects(projects, defaultProjectId){
     if (!els.projectSelect) return;
 
-    const current = getSelectedProjectId();
+    const keepCurrent = getSelectedProjectId();
     els.projectSelect.innerHTML = '';
 
     if (!projects || projects.length === 0) {
@@ -710,7 +747,7 @@
       els.projectSelect.appendChild(opt);
     }
 
-    const desired = current || defaultProjectId || projects[0].id;
+    const desired = keepCurrent || defaultProjectId || projects[0].id;
     els.projectSelect.value = desired;
 
     if (els.chipFocus) {
@@ -742,7 +779,7 @@
       return `
         <div class="row">
           <div class="rowLeft">
-            <span class="badge" style="background:rgba(96,165,250,.16); border-color:rgba(96,165,250,.22);"></span>
+            <span class="badge"></span>
             <div style="min-width:0;">
               <div class="rowTitle">${escapeHtml(s.projectTitle)}</div>
               <div class="rowSub">${escapeHtml(endLocal)}</div>
@@ -754,13 +791,14 @@
   }
 
   function renderTotals(st){
-    // Semana / Hoje
     const weekTxt = secondsToHhMm(st.weekTotalSeconds ?? 0);
     const todayTxt = secondsToHhMm(st.todayTotalSeconds ?? 0);
 
     if (els.chipWeekTotal) els.chipWeekTotal.textContent = weekTxt;
     if (els.weekTotal) els.weekTotal.textContent = weekTxt;
     if (els.todayDone) els.todayDone.textContent = todayTxt;
+
+    if (els.weekDelta) els.weekDelta.textContent = '—';
 
     if (els.chipUpdated) {
       const d = new Date();
@@ -769,40 +807,56 @@
   }
 
   function renderState(st){
+    // st esperado:
+    // { defaultProjectId, defaultProjectTitle, projects[], weekTotalSeconds, todayTotalSeconds, activeGoalTargetSeconds?, activeSession?, lastSessions[] }
     renderProjects(st.projects, st.defaultProjectId);
     renderTotals(st);
     renderLastSessions(st.lastSessions);
 
+    // chip nome do projeto default (se vier)
+    if (els.chipFocus) {
+      const title =
+        st.defaultProjectTitle ??
+        st.projects?.find(p => p.id === st.defaultProjectId)?.title ??
+        els.chipFocus.textContent ??
+        '—';
+      els.chipFocus.textContent = title;
+    }
+
     const active = st.activeSession;
 
     if (!active) {
-      if (els.btnStart) els.btnStart.classList.remove('d-none');
-      if (els.btnStop) els.btnStop.classList.add('d-none');
-      if (els.btnCancel) els.btnCancel.classList.add('d-none');
+      els.btnStart?.classList.remove('d-none');
+      els.btnStop?.classList.add('d-none');
+      els.btnCancel?.classList.add('d-none');
 
       if (els.projectSelect) els.projectSelect.disabled = false;
 
       stopTimerAndReset(true);
       setStatus('stop');
-      setRingProgress(0); // ring zerado quando parado
+
+      // ring = progresso do dia/meta (ou 0 se não tiver meta)
+      if (st.activeGoalTargetSeconds && st.activeGoalTargetSeconds > 0) {
+        setRingProgress((st.todayTotalSeconds ?? 0) / st.activeGoalTargetSeconds);
+      } else {
+        setRingProgress(0);
+      }
       return;
     }
 
     // Sessão ativa
-    if (els.btnStart) els.btnStart.classList.add('d-none');
-    if (els.btnStop) els.btnStop.classList.remove('d-none');
-    if (els.btnCancel) els.btnCancel.classList.remove('d-none');
+    els.btnStart?.classList.add('d-none');
+    els.btnStop?.classList.remove('d-none');
+    els.btnCancel?.classList.remove('d-none');
 
     if (els.projectSelect) els.projectSelect.disabled = true;
 
     setStatus('on');
-    startTimerFromUtc(active.startTimeUtc);
+    if (active.startTimeUtc) startTimerFromUtc(active.startTimeUtc);
 
-    // progresso: se tiver meta ativa, usa Today/Target
     if (st.activeGoalTargetSeconds && st.activeGoalTargetSeconds > 0) {
       setRingProgress((st.todayTotalSeconds ?? 0) / st.activeGoalTargetSeconds);
     } else {
-      // sem meta: só mostra “ativo” (um preenchimento leve)
       setRingProgress(0.85);
     }
   }
@@ -816,13 +870,21 @@
   els.projectSelect?.addEventListener('change', async () => {
     try {
       setLoading(true);
+
       const projectId = getSelectedProjectId();
       if (!projectId) return;
+
+      // pode retornar 204 (sem body) -> ok
       await apiPost('/projects/set-default', { projectId });
+
+      // IMPORTANT: totais devem vir filtrados pelo projeto default após esse POST
       await reloadDashboardState();
+
       showToast('Projeto padrão atualizado.');
     } catch (e) {
       showToast(e.message || 'Erro ao trocar projeto.');
+      // tenta reconstruir estado mesmo em erro
+      try { await reloadDashboardState(); } catch {}
     } finally {
       setLoading(false);
     }
@@ -831,18 +893,22 @@
   els.btnStart?.addEventListener('click', async () => {
     try {
       setLoading(true);
+
       const projectId = getSelectedProjectId();
       if (!projectId) {
         showToast('Selecione um projeto antes de iniciar.');
         return;
       }
+
       const started = await apiPost('/sessions/start', { projectId, goalId: null });
-      startTimerFromUtc(started.startTimeUtc);
+      // started pode vir null se sua API retorna 204 -> então reconstruímos via dashboard-state
+      if (started?.startTimeUtc) startTimerFromUtc(started.startTimeUtc);
+
       await reloadDashboardState();
       showToast('Sessão iniciada.');
     } catch (e) {
       showToast(e.message || 'Erro ao iniciar sessão.');
-      await reloadDashboardState();
+      try { await reloadDashboardState(); } catch {}
     } finally {
       setLoading(false);
     }
@@ -851,13 +917,15 @@
   els.btnStop?.addEventListener('click', async () => {
     try {
       setLoading(true);
-      await apiPost('/sessions/stop', null);
+
+      await apiPost('/sessions/stop', null); // pode ser 204
       stopTimerAndReset(true);
+
       await reloadDashboardState();
       showToast('Sessão finalizada.');
     } catch (e) {
       showToast(e.message || 'Erro ao finalizar sessão.');
-      await reloadDashboardState();
+      try { await reloadDashboardState(); } catch {}
     } finally {
       setLoading(false);
     }
@@ -866,13 +934,15 @@
   els.btnCancel?.addEventListener('click', async () => {
     try {
       setLoading(true);
-      await apiPost('/sessions/cancel', null);
+
+      await apiPost('/sessions/cancel', null); // pode ser 204
       stopTimerAndReset(true);
+
       await reloadDashboardState();
       showToast('Sessão cancelada.');
     } catch (e) {
       showToast(e.message || 'Erro ao cancelar sessão.');
-      await reloadDashboardState();
+      try { await reloadDashboardState(); } catch {}
     } finally {
       setLoading(false);
     }
@@ -894,7 +964,6 @@
   })();
 
 })();
-</script>
-
+  </script>
 </body>
 </html>
