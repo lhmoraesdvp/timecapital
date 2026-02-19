@@ -118,40 +118,132 @@ public sealed class SessionService : ISessionService
         return new CancelSessionResponse(session.Id, session.StartTimeUtc, now);
     }
 
-    public async Task<DashboardStateDto> GetDashboardStateAsync(string userId, CancellationToken ct = default)
+public async Task<DashboardStateDto> GetDashboardStateAsync(string userId, CancellationToken ct = default)
+{
+    var now = DateTimeOffset.UtcNow;
+
+    // "Hoje" em UTC (MVP)
+    var todayStartUtc = new DateTimeOffset(now.Date, TimeSpan.Zero);
+
+    // Semana (ISO-ish): segunda-feira 00:00 UTC
+    var diff = ((int)now.DayOfWeek + 6) % 7; // Mon=0..Sun=6
+    var weekStartUtc = new DateTimeOffset(now.Date.AddDays(-diff), TimeSpan.Zero);
+
+    // defaultProjectId
+    var defaultProjectId = await _db.Users
+        .AsNoTracking()
+        .Where(u => u.Id == userId)
+        .Select(u => u.DefaultProjectId)
+        .SingleAsync(ct);
+
+    // projetos (dropdown)
+    var projects = await _db.Projects
+        .AsNoTracking()
+        .Where(p => p.OwnerId == userId && p.Status == ProjectStatus.Active)
+        .OrderBy(p => p.Title)
+        .Select(p => new ProjectListItemDto(p.Id, p.Title))
+        .ToListAsync(ct);
+
+    // título do default (se houver)
+    string? defaultProjectTitle = null;
+    if (defaultProjectId is Guid dpId)
     {
-        var defaultProjectId = await _db.Users
+        defaultProjectTitle = await _db.Projects
             .AsNoTracking()
-            .Where(u => u.Id == userId)
-            .Select(u => u.DefaultProjectId)
-            .SingleAsync(ct);
+            .Where(p => p.Id == dpId && p.OwnerId == userId)
+            .Select(p => p.Title)
+            .SingleOrDefaultAsync(ct);
+    }
 
-        var projects = await _db.Projects
-            .AsNoTracking()
-            .Where(p => p.OwnerId == userId && p.Status == ProjectStatus.Active)
-            .OrderBy(p => p.Title)
-            .Select(p => new ProjectListItemDto(p.Id, p.Title))
-            .ToListAsync(ct);
+    // sessão ativa
+    var active = await _db.Sessions
+        .AsNoTracking()
+        .Where(s => s.UserId == userId && s.EndTimeUtc == null && s.CanceledAtUtc == null)
+        .Select(s => new ActiveSessionDto(s.Id, s.ProjectId, s.GoalId, s.StartTimeUtc))
+        .SingleOrDefaultAsync(ct);
 
-        var active = await _db.Sessions
+    // meta (somente se sessão ativa tem GoalId)
+    int? activeGoalTargetSeconds = null;
+    if (active?.GoalId is Guid goalId)
+    {
+        activeGoalTargetSeconds = await _db.Goals
             .AsNoTracking()
-            .Where(s => s.UserId == userId && s.EndTimeUtc == null && s.CanceledAtUtc == null)
-            .Select(s => new ActiveSessionDto(s.Id, s.ProjectId, s.GoalId, s.StartTimeUtc))
+            .Where(g => g.Id == goalId)
+            .Select(g => g.TargetMinutes * 60)
             .SingleOrDefaultAsync(ct);
 
-var totals = await _db.Sessions
-    .AsNoTracking()
-    .Where(s => s.UserId == userId && s.EndTimeUtc != null && s.CanceledAtUtc == null)
-    .GroupBy(s => s.ProjectId)
-    .Select(g => new ProjectTotalDto(
-        g.Key,
-        g.Sum(x => EF.Functions.DateDiffSecond(x.StartTimeUtc, x.EndTimeUtc!.Value))
-    ))
-    .ToListAsync(ct);
-
-
-        return new DashboardStateDto(defaultProjectId, projects, active, totals);
+        if (activeGoalTargetSeconds == 0)
+            activeGoalTargetSeconds = null;
     }
+
+    // query base: sessões concluídas (não canceladas)
+    var completed = _db.Sessions
+        .AsNoTracking()
+        .Where(s => s.UserId == userId && s.EndTimeUtc != null && s.CanceledAtUtc == null);
+
+    // total do projeto default (somente concluídas)
+    var defaultProjectTotalSeconds = 0;
+    if (defaultProjectId is Guid dpId2)
+    {
+        defaultProjectTotalSeconds = await completed
+            .Where(s => s.ProjectId == dpId2)
+            .SumAsync(s => EF.Functions.DateDiffSecond(s.StartTimeUtc, s.EndTimeUtc!.Value), ct);
+    }
+
+    // totais hoje/semana (MVP simples: conta sessões que iniciaram dentro do período)
+    var todayTotalSeconds = await completed
+        .Where(s => s.StartTimeUtc >= todayStartUtc)
+        .SumAsync(s => EF.Functions.DateDiffSecond(s.StartTimeUtc, s.EndTimeUtc!.Value), ct);
+
+    var weekTotalSeconds = await completed
+        .Where(s => s.StartTimeUtc >= weekStartUtc)
+        .SumAsync(s => EF.Functions.DateDiffSecond(s.StartTimeUtc, s.EndTimeUtc!.Value), ct);
+
+    // últimas sessões do projeto default
+    var lastSessions = new List<LastSessionDto>();
+    if (defaultProjectId is Guid dpId3)
+    {
+        lastSessions = await completed
+            .Where(s => s.ProjectId == dpId3)
+            .OrderByDescending(s => s.EndTimeUtc)
+            .Take(10)
+            .Join(_db.Projects.AsNoTracking(),
+                  s => s.ProjectId,
+                  p => p.Id,
+                  (s, p) => new LastSessionDto(
+                      s.Id,
+                      s.ProjectId,
+                      p.Title,
+                      s.GoalId,
+                      s.StartTimeUtc,
+                      s.EndTimeUtc!.Value,
+                      EF.Functions.DateDiffSecond(s.StartTimeUtc, s.EndTimeUtc!.Value)
+                  ))
+            .ToListAsync(ct);
+    }
+
+    // totals por projeto (mantém)
+    var totalsByProject = await completed
+        .GroupBy(s => s.ProjectId)
+        .Select(g => new ProjectTotalDto(
+            g.Key,
+            g.Sum(x => EF.Functions.DateDiffSecond(x.StartTimeUtc, x.EndTimeUtc!.Value))
+        ))
+        .ToListAsync(ct);
+
+    return new DashboardStateDto(
+        defaultProjectId,
+        defaultProjectTitle,
+        projects,
+        active,
+        defaultProjectTotalSeconds,
+        todayTotalSeconds,
+        weekTotalSeconds,
+        activeGoalTargetSeconds,
+        lastSessions,
+        totalsByProject
+    );
+}
 
     private static bool IsUniqueViolation(DbUpdateException ex)
     {
