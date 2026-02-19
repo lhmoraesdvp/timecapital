@@ -1,4 +1,5 @@
-﻿@{
+﻿@model TimeCapital.Web.Controllers.ProjectsPageController.ProjectsIndexVm
+@{
   Layout = null;
 }
 
@@ -7,7 +8,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TimeCapital — Dashboard</title>
+  <title>TimeCapital — Projetos</title>
 
   <style>
     :root{
@@ -19,23 +20,14 @@
       --text-strong: #0f172a;
       --muted: #94a3b8;
 
-      --track: #eef2f7;
-
       --mango: #f47280;
       --plant: #34d399;
-      --sky:   #60a5fa;
-
-      --start-main: #34d399;
-      --start-soft: #6ee7b7;
-
-      --pause-main: #f59e0b;
-      --pause-soft: #fbbf24;
-
-      --reset-bg: rgba(148,163,184,0.14);
 
       --shadow: 0 14px 38px rgba(15, 23, 42, 0.06);
       --radius: 26px;
       --radius-sm: 18px;
+
+      --btn-bg: rgba(148,163,184,0.14);
     }
 
     *{ box-sizing:border-box; }
@@ -51,9 +43,36 @@
     }
 
     .wrap{
-      max-width: 1180px;
+      max-width: 980px;
       margin: 0 auto;
       padding: 30px 18px 56px;
+    }
+
+    .breadcrumbs{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin: 0 0 14px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .breadcrumbs a{
+      color: var(--text);
+      text-decoration:none;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(6px);
+      padding: 6px 10px;
+      border-radius: 999px;
+      transition: background .18s ease;
+    }
+    .breadcrumbs a:hover{
+      background: rgba(148,163,184,.12);
+    }
+    .breadcrumbs .sep{ opacity:.8; }
+    .breadcrumbs .current{
+      color: var(--text-strong);
+      font-weight: 650;
     }
 
     .top{
@@ -63,7 +82,6 @@
       gap: 16px;
       margin-bottom: 16px;
     }
-    .brand{ min-width:0; }
     .kicker{
       font-size: 11px;
       letter-spacing:.2px;
@@ -72,7 +90,7 @@
     }
     h1{
       margin:0;
-      font-size: 28px;
+      font-size: 26px;
       line-height:1.1;
       letter-spacing: -0.3px;
       font-weight: 650;
@@ -85,237 +103,26 @@
       max-width: 70ch;
     }
 
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      justify-content:flex-end;
-      align-items:center;
-    }
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 9px 12px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: rgba(255,255,255,.72);
-      backdrop-filter: blur(6px);
-      color: var(--text);
-      font-size: 12px;
-      white-space:nowrap;
-    }
-    .chip .dot{
-      width:7px;height:7px;border-radius:50%;
-      background: linear-gradient(135deg, var(--mango), var(--plant));
-      box-shadow: 0 0 0 3px rgba(244,114,128,.10);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: 1.35fr .95fr;
-      gap: 14px;
-      align-items:start;
-    }
-
     .card{
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
+      padding: 16px;
     }
 
-    .hero{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
-
-    .heroHeader{
+    .toolbar{
       display:flex;
-      align-items:flex-start;
+      gap:10px;
+      align-items:center;
       justify-content:space-between;
-      gap: 14px;
-      padding: 18px 18px 0;
-    }
-    .heroTitle{
-      margin:0;
-      font-size: 14px;
-      font-weight: 650;
-      letter-spacing: -.15px;
-      color: var(--text-strong);
-    }
-    .heroNote{
-      margin: 6px 0 0;
-      font-size: 12px;
-      color: var(--text);
-      line-height:1.5;
-    }
-    .heroStat{
-      text-align:right;
-      min-width: 160px;
-    }
-    .heroStat .label{
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-    .heroStat .value{
-      font-size: 26px;
-      font-weight: 650;
-      letter-spacing: -0.3px;
-      color: var(--text-strong);
-    }
-    .heroStat .delta{
-      margin-top: 6px;
-      font-size: 11px;
-      color: rgba(52,211,153,.95);
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      justify-content:flex-end;
-    }
-    .heroStat .delta .miniDot{
-      width:6px;height:6px;border-radius:50%;
-      background: rgba(52,211,153,.95);
-      opacity:.9;
-    }
-
-    .widgetShell{
-      margin: 0 14px 14px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      background:
-        radial-gradient(520px 260px at 20% 0%, rgba(244,114,128,.09), transparent 60%),
-        radial-gradient(520px 260px at 90% 30%, rgba(52,211,153,.08), transparent 60%),
-        #fff;
-      padding: 16px 16px 14px;
-    }
-
-    .wHeader{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap: 16px;
-    }
-
-    .area{ flex:1; min-width: 0; }
-    .area .label{
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: .2px;
-      margin-bottom: 8px;
-    }
-
-    .selectV3c{
-      position: relative;
-      padding-bottom: 2px;
-    }
-    .selectV3c select{
-      width:100%;
-      border:none;
-      background:transparent;
-      font-size: 16px;
-      font-weight: 520;
-      color: var(--text-strong);
-      padding: 6px 28px 6px 0;
-      appearance:none;
-      outline:none;
-    }
-    .selectV3c::after{
-      content:"⌄";
-      position:absolute;
-      right:0;
-      bottom: 10px;
-      font-size: 12px;
-      pointer-events:none;
-      background: linear-gradient(135deg, var(--mango), var(--plant));
-      -webkit-background-clip:text;
-      background-clip:text;
-      color: transparent;
-      opacity: .9;
-    }
-    .selectV3c .line{
-      height: 2px;
-      width: 100%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, rgba(244,114,128,0.55), rgba(52,211,153,0.45));
-      margin-top: 2px;
-    }
-    .selectV3c:focus-within .line{
-      background: linear-gradient(90deg, rgba(244,114,128,0.78), rgba(52,211,153,0.72));
-    }
-
-    .today{
-      text-align:right;
-      min-width: 120px;
-    }
-    .today .tlabel{
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-    .today .tvalue{
-      font-size: 15px;
-      font-weight: 520;
-      color: var(--text-strong);
-    }
-
-    .ringWrap{
-      position: relative;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      margin: 18px 0 14px;
-    }
-    .ringWrap svg{
-      width: 270px;
-      height: 270px;
-      display:block;
-    }
-    .track{
-      fill:none;
-      stroke: var(--track);
-      stroke-width: 8;
-    }
-    .progress{
-      fill:none;
-      stroke: url(#grad);
-      stroke-width: 8;
-      stroke-linecap: round;
-      transform: rotate(-90deg);
-      transform-origin: 50% 50%;
-    }
-    .center{
-      position:absolute;
-      text-align:center;
-      pointer-events:none;
-    }
-    .time{
-      font-size: 34px;
-      font-weight: 520;
-      letter-spacing: 1px;
-      color: var(--text);
-    }
-    .meta{
-      margin-top: 8px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .controls{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap: 12px;
-      margin-top: 2px;
-      flex-wrap:wrap;
+      margin-bottom: 10px;
     }
 
     .btn{
       border:none;
       border-radius: 999px;
-      display:flex;
+      display:inline-flex;
       align-items:center;
       justify-content:center;
       cursor:pointer;
@@ -324,76 +131,22 @@
       padding: 10px 14px;
       font-weight: 650;
       font-size: 13px;
-      min-width: 120px;
+      text-decoration:none;
+      white-space:nowrap;
     }
     .btn:active{ transform: scale(.97); }
 
-    .btnStart{
-      background: linear-gradient(135deg, var(--start-main), var(--start-soft));
+    .btnPrimary{
+      background: linear-gradient(135deg, var(--plant), rgba(110,231,183,.95));
       box-shadow: 0 12px 26px rgba(52,211,153,.18);
       color:#fff;
     }
-    .btnStop{
-      background: linear-gradient(135deg, var(--pause-main), var(--pause-soft));
-      box-shadow: 0 12px 26px rgba(245,158,11,.18);
-      color:#fff;
-    }
-    .btnCancel{
-      background: var(--reset-bg);
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
-      color: var(--text-strong);
-    }
-
-    .status{
-      margin-top: 14px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap: 8px;
-      font-size: 11px;
-      color: var(--muted);
-    }
-    .status .dot{
-      width:6px;height:6px;border-radius:50%;
-      background: var(--muted);
-      box-shadow:none;
-    }
-    .status.on{ color: rgba(52,211,153,.90); }
-    .status.on .dot{ background: rgba(52,211,153,.90); }
-    .status.stop{ color: var(--muted); }
-    .status.stop .dot{ background: var(--muted); }
-
-    .side{
-      display:grid;
-      grid-template-rows: auto auto 1fr;
-      gap: 14px;
-    }
-
-    .cardHead{
-      display:flex;
-      align-items:baseline;
-      justify-content:space-between;
-      gap: 10px;
-      padding: 16px 16px 10px;
-    }
-    .cardHead h3{
-      margin:0;
-      font-size: 13px;
-      font-weight: 650;
-      letter-spacing:-.15px;
-    }
-    .cardHead .hint{
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .chartPad{ padding: 6px 14px 14px; }
 
     .list{
-      padding: 8px 14px 14px;
       display:flex;
       flex-direction:column;
       gap: 10px;
+      margin-top: 10px;
     }
     .row{
       border: 1px solid var(--border);
@@ -427,18 +180,6 @@
       white-space:nowrap;
       color: var(--text-strong);
     }
-    .rowSub{
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-    .rowRight{
-      font-weight:650;
-      color: var(--text-strong);
-      font-size: 13px;
-      white-space:nowrap;
-      margin-left: 10px;
-    }
 
     .alert{
       border: 1px solid var(--border);
@@ -449,521 +190,60 @@
       color: var(--text);
       margin-top: 10px;
     }
-
-    .d-none{ display:none !important; }
-
-    @@media (max-width: 980px){
-      .grid{ grid-template-columns: 1fr; }
-      .chips{ justify-content:flex-start; }
-    }
   </style>
 </head>
 
 <body>
   <div class="wrap">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/dashboard">Dashboard</a>
+      <span class="sep">›</span>
+      <span class="current">Projetos</span>
+    </nav>
+
     <div class="top">
-      <div class="brand">
-        <div class="kicker">TimeCapital • Dashboard (local dev)</div>
-        <h1>Consistência, sem ruído.</h1>
-        <p class="subtitle">Cronômetro persistente baseado no StartTimeUtc do backend. Refresh reconstrói sem depender de memória.</p>
+      <div>
+        <div class="kicker">TimeCapital • Cadastro</div>
+        <h1>Projetos</h1>
+        <p class="subtitle">Lista simples (MVC). Próximo passo: criar/editar/excluir e definir padrão.</p>
       </div>
 
-      <div class="chips" aria-label="Resumo rápido">
-        <div class="chip"><span class="dot"></span>Projeto: <strong id="chipFocus">—</strong></div>
-        <div class="chip">Semana: <strong id="chipWeekTotal">—</strong></div>
-        <div class="chip">Atualizado: <strong id="chipUpdated">—</strong></div>
-      </div>
+      <a class="btn btnPrimary" href="/dashboard">Voltar</a>
     </div>
 
-    <div class="grid">
-      <!-- LEFT -->
-      <section class="card hero" aria-label="Sessão atual">
-        <div class="heroHeader">
-          <div>
-            <div class="heroTitle">Sessão (MVP)</div>
-            <div class="heroNote">Start/Stop/Cancel + cronômetro reconstituído pelo backend.</div>
-          </div>
+    <section class="card">
+      <div class="toolbar">
+        <div style="font-size:13px;color:var(--text);font-weight:650;">Seus projetos</div>
+        <!-- Próximo passo: botão Novo + form -->
+        <button class="btn btnPrimary" type="button" disabled title="Vamos implementar já já">
+          + Novo projeto
+        </button>
+      </div>
 
-          <div class="heroStat" aria-label="Total semanal">
-            <div class="label">Semana</div>
-            <div class="value" id="weekTotal">—</div>
-            <div class="delta"><span class="miniDot"></span><span id="weekDelta">—</span></div>
-          </div>
-        </div>
-
-        <div class="widgetShell" role="group" aria-label="Timer">
-          <div class="wHeader">
-            <div class="area">
-              <div class="label">Projeto</div>
-              <div class="selectV3c">
-                <select id="projectSelect" aria-label="Selecione o projeto">
-                  <option value="">Carregando...</option>
-                </select>
-                <div class="line"></div>
+      @if (Model.Projects == null || Model.Projects.Count == 0)
+      {
+        <div class="alert">Nenhum projeto ainda. (Em seguida vamos habilitar “Novo projeto”.)</div>
+      }
+      else
+      {
+        <div class="list" role="list" aria-label="Lista de projetos">
+          @foreach (var p in Model.Projects)
+          {
+            <div class="row" role="listitem">
+              <div class="rowLeft">
+                <span class="badge"></span>
+                <div style="min-width:0;">
+                  <div class="rowTitle">@p.Title</div>
+                </div>
+              </div>
+              <div style="font-size:12px;color:var(--muted);white-space:nowrap;">
+                @p.Id
               </div>
             </div>
-
-            <div class="today" aria-label="Hoje">
-              <div class="tlabel">Hoje</div>
-              <div class="tvalue" id="todayDone">—</div>
-            </div>
-          </div>
-
-          <div class="ringWrap" aria-label="Cronômetro">
-            <svg viewBox="0 0 300 300" aria-hidden="true">
-              <defs>
-                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#f47280"/>
-                  <stop offset="100%" stop-color="#34d399"/>
-                </linearGradient>
-              </defs>
-
-              <circle class="track" cx="150" cy="150" r="120"></circle>
-              <circle class="progress"
-                      id="ringProgress"
-                      cx="150" cy="150" r="120"
-                      stroke-dasharray="754"
-                      stroke-dashoffset="754"></circle>
-            </svg>
-
-            <div class="center">
-              <div class="time" id="timeText">00:00:00</div>
-              <div class="meta" id="sessionStatus">Carregando…</div>
-            </div>
-          </div>
-
-          <div class="controls" aria-label="Ações">
-            <button class="btn btnStart" id="btnStart" type="button">Start</button>
-            <button class="btn btnStop d-none" id="btnStop" type="button">Stop</button>
-            <button class="btn btnCancel d-none" id="btnCancel" type="button">Cancel</button>
-          </div>
-
-          <div class="status stop" id="status">
-            <div class="dot"></div>
-            <span id="statusText">Carregando…</span>
-          </div>
-
-          <div id="toastArea"></div>
+          }
         </div>
-      </section>
-
-      <!-- RIGHT -->
-      <aside class="side" aria-label="Painéis (mock)">
-        <section class="card" aria-label="Mock 1">
-          <div class="cardHead">
-            <h3>Distribuição (mock)</h3>
-            <div class="hint">Esta semana</div>
-          </div>
-          <div class="chartPad">
-            <div class="alert">Ainda mockado. O foco aqui é cronômetro persistente.</div>
-          </div>
-        </section>
-
-        <section class="card" aria-label="Mock 2">
-          <div class="cardHead">
-            <h3>Horas por dia (mock)</h3>
-            <div class="hint">Últimos 7 dias</div>
-          </div>
-          <div class="chartPad">
-            <div class="alert">Mock.</div>
-          </div>
-        </section>
-
-        <section class="card" aria-label="Últimas sessões">
-          <div class="cardHead">
-            <h3>Últimas sessões</h3>
-            <div class="hint">Projeto padrão</div>
-          </div>
-          <div class="list" id="sessionList"></div>
-        </section>
-      </aside>
-    </div>
+      }
+    </section>
   </div>
-
-  <script>
-(() => {
-  const els = {
-    projectSelect: document.getElementById('projectSelect'),
-    btnStart: document.getElementById('btnStart'),
-    btnStop: document.getElementById('btnStop'),
-    btnCancel: document.getElementById('btnCancel'),
-
-    timeText: document.getElementById('timeText'),
-    sessionStatus: document.getElementById('sessionStatus'),
-    statusText: document.getElementById('statusText'),
-    status: document.getElementById('status'),
-
-    chipFocus: document.getElementById('chipFocus'),
-    chipWeekTotal: document.getElementById('chipWeekTotal'),
-    chipUpdated: document.getElementById('chipUpdated'),
-
-    weekTotal: document.getElementById('weekTotal'),
-    weekDelta: document.getElementById('weekDelta'),
-    todayDone: document.getElementById('todayDone'),
-
-    sessionList: document.getElementById('sessionList'),
-    toastArea: document.getElementById('toastArea'),
-
-    ring: document.getElementById('ringProgress'),
-  };
-
-  const CIRC = 754;
-
-  // ===== Timer persistente =====
-  let timer = { intervalId: null, startUtcMs: null };
-
-  const pad2 = (n) => String(n).padStart(2, '0');
-
-  function formatHMS(totalSeconds) {
-    const s = Math.max(0, Math.floor(totalSeconds));
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-    return `${pad2(h)}:${pad2(m)}:${pad2(sec)}`;
-  }
-
-  function secondsToHhMm(totalSeconds){
-    const s = Math.max(0, Math.floor(totalSeconds));
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    return `${h}h ${pad2(m)}m`;
-  }
-
-  function tick() {
-    if (timer.startUtcMs == null) return;
-    const elapsedSec = (Date.now() - timer.startUtcMs) / 1000;
-    if (els.timeText) els.timeText.textContent = formatHMS(elapsedSec);
-  }
-
-  function startTimerFromUtc(startTimeUtc) {
-    stopTimerAndReset(false);
-    timer.startUtcMs = Date.parse(startTimeUtc);
-    tick();
-    timer.intervalId = setInterval(tick, 1000);
-  }
-
-  function stopTimerAndReset(resetText = true) {
-    if (timer.intervalId) clearInterval(timer.intervalId);
-    timer.intervalId = null;
-    timer.startUtcMs = null;
-    if (resetText && els.timeText) els.timeText.textContent = '00:00:00';
-  }
-
-  // ===== UI helpers =====
-  function escapeHtml(str) {
-    return String(str)
-      .replaceAll('&','&amp;')
-      .replaceAll('<','&lt;')
-      .replaceAll('>','&gt;')
-      .replaceAll('"','&quot;')
-      .replaceAll("'","&#039;");
-  }
-
-  function showToast(msg) {
-    if (!els.toastArea) return;
-    els.toastArea.innerHTML = `<div class="alert">${escapeHtml(msg)}</div>`;
-    setTimeout(() => { els.toastArea.innerHTML = ''; }, 2400);
-  }
-
-  function setStatus(mode){
-    if (!els.status || !els.statusText) return;
-    els.status.classList.remove('on','stop');
-    if (mode === 'on') {
-      els.status.classList.add('on');
-      els.statusText.textContent = 'Ativo';
-      if (els.sessionStatus) els.sessionStatus.textContent = 'Sessão ativa';
-    } else {
-      els.status.classList.add('stop');
-      els.statusText.textContent = 'Parado';
-      if (els.sessionStatus) els.sessionStatus.textContent = 'Parado';
-    }
-  }
-
-  function setRingProgress(p01){
-    if (!els.ring) return;
-    const p = Math.max(0, Math.min(1, p01));
-    els.ring.setAttribute('stroke-dashoffset', String(CIRC * (1 - p)));
-  }
-
-  function setLoading(isLoading){
-    if (els.projectSelect) els.projectSelect.disabled = isLoading;
-    if (els.btnStart) els.btnStart.disabled = isLoading;
-    if (els.btnStop) els.btnStop.disabled = isLoading;
-    if (els.btnCancel) els.btnCancel.disabled = isLoading;
-  }
-
-  // ===== API (safe for empty response body / 204) =====
-  async function handleResponse(res) {
-    const text = await res.text(); // pode vir vazio (204)
-    let data = null;
-    try { data = text ? JSON.parse(text) : null; } catch {}
-
-    if (!res.ok) {
-      const msg = data?.message || text || `Erro HTTP ${res.status}`;
-      throw new Error(msg);
-    }
-    return data;
-  }
-
-  async function apiGet(url) {
-    const res = await fetch(url, { method:'GET', headers:{'Accept':'application/json'} });
-    return handleResponse(res);
-  }
-
-  async function apiPost(url, bodyObj) {
-    const res = await fetch(url, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body: bodyObj ? JSON.stringify(bodyObj) : '{}' // mantém compatível
-    });
-    return handleResponse(res);
-  }
-
-  // ===== Render =====
-  function getSelectedProjectId() {
-    const v = els.projectSelect?.value;
-    return v && v !== 'null' ? v : null;
-  }
-
-  function renderProjects(projects, defaultProjectId){
-    if (!els.projectSelect) return;
-
-    const keepCurrent = getSelectedProjectId();
-    els.projectSelect.innerHTML = '';
-
-    if (!projects || projects.length === 0) {
-      const opt = document.createElement('option');
-      opt.value = 'null';
-      opt.textContent = 'Nenhum projeto';
-      els.projectSelect.appendChild(opt);
-      if (els.chipFocus) els.chipFocus.textContent = '—';
-      return;
-    }
-
-    for (const p of projects) {
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = p.title;
-      els.projectSelect.appendChild(opt);
-    }
-
-    const desired = keepCurrent || defaultProjectId || projects[0].id;
-    els.projectSelect.value = desired;
-
-    if (els.chipFocus) {
-      const title = projects.find(x => x.id === desired)?.title ?? '—';
-      els.chipFocus.textContent = title;
-    }
-  }
-
-  function renderLastSessions(list){
-    if (!els.sessionList) return;
-
-    if (!list || list.length === 0) {
-      els.sessionList.innerHTML = `
-        <div class="row">
-          <div class="rowLeft">
-            <span class="badge" style="background:rgba(148,163,184,.14); border-color:rgba(148,163,184,.20);"></span>
-            <div style="min-width:0;">
-              <div class="rowTitle">Nenhuma sessão ainda</div>
-              <div class="rowSub">Comece com Start 🙂</div>
-            </div>
-          </div>
-          <div class="rowRight">—</div>
-        </div>`;
-      return;
-    }
-
-    els.sessionList.innerHTML = list.map(s => {
-      const endLocal = new Date(s.endTimeUtc).toLocaleString();
-      return `
-        <div class="row">
-          <div class="rowLeft">
-            <span class="badge"></span>
-            <div style="min-width:0;">
-              <div class="rowTitle">${escapeHtml(s.projectTitle)}</div>
-              <div class="rowSub">${escapeHtml(endLocal)}</div>
-            </div>
-          </div>
-          <div class="rowRight">${secondsToHhMm(s.durationSeconds)}</div>
-        </div>`;
-    }).join('');
-  }
-
-  function renderTotals(st){
-    const weekTxt = secondsToHhMm(st.weekTotalSeconds ?? 0);
-    const todayTxt = secondsToHhMm(st.todayTotalSeconds ?? 0);
-
-    if (els.chipWeekTotal) els.chipWeekTotal.textContent = weekTxt;
-    if (els.weekTotal) els.weekTotal.textContent = weekTxt;
-    if (els.todayDone) els.todayDone.textContent = todayTxt;
-
-    if (els.weekDelta) els.weekDelta.textContent = '—';
-
-    if (els.chipUpdated) {
-      const d = new Date();
-      els.chipUpdated.textContent = `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-    }
-  }
-
-  function renderState(st){
-    // st esperado:
-    // { defaultProjectId, defaultProjectTitle, projects[], weekTotalSeconds, todayTotalSeconds, activeGoalTargetSeconds?, activeSession?, lastSessions[] }
-    renderProjects(st.projects, st.defaultProjectId);
-    renderTotals(st);
-    renderLastSessions(st.lastSessions);
-
-    // chip nome do projeto default (se vier)
-    if (els.chipFocus) {
-      const title =
-        st.defaultProjectTitle ??
-        st.projects?.find(p => p.id === st.defaultProjectId)?.title ??
-        els.chipFocus.textContent ??
-        '—';
-      els.chipFocus.textContent = title;
-    }
-
-    const active = st.activeSession;
-
-    if (!active) {
-      els.btnStart?.classList.remove('d-none');
-      els.btnStop?.classList.add('d-none');
-      els.btnCancel?.classList.add('d-none');
-
-      if (els.projectSelect) els.projectSelect.disabled = false;
-
-      stopTimerAndReset(true);
-      setStatus('stop');
-
-      // ring = progresso do dia/meta (ou 0 se não tiver meta)
-      if (st.activeGoalTargetSeconds && st.activeGoalTargetSeconds > 0) {
-        setRingProgress((st.todayTotalSeconds ?? 0) / st.activeGoalTargetSeconds);
-      } else {
-        setRingProgress(0);
-      }
-      return;
-    }
-
-    // Sessão ativa
-    els.btnStart?.classList.add('d-none');
-    els.btnStop?.classList.remove('d-none');
-    els.btnCancel?.classList.remove('d-none');
-
-    if (els.projectSelect) els.projectSelect.disabled = true;
-
-    setStatus('on');
-    if (active.startTimeUtc) startTimerFromUtc(active.startTimeUtc);
-
-    if (st.activeGoalTargetSeconds && st.activeGoalTargetSeconds > 0) {
-      setRingProgress((st.todayTotalSeconds ?? 0) / st.activeGoalTargetSeconds);
-    } else {
-      setRingProgress(0.85);
-    }
-  }
-
-  async function reloadDashboardState(){
-    const st = await apiGet('/dashboard-state');
-    renderState(st);
-  }
-
-  // ===== Events =====
-  els.projectSelect?.addEventListener('change', async () => {
-    try {
-      setLoading(true);
-
-      const projectId = getSelectedProjectId();
-      if (!projectId) return;
-
-      // pode retornar 204 (sem body) -> ok
-      await apiPost('/projects/set-default', { projectId });
-
-      // IMPORTANT: totais devem vir filtrados pelo projeto default após esse POST
-      await reloadDashboardState();
-
-      showToast('Projeto padrão atualizado.');
-    } catch (e) {
-      showToast(e.message || 'Erro ao trocar projeto.');
-      // tenta reconstruir estado mesmo em erro
-      try { await reloadDashboardState(); } catch {}
-    } finally {
-      setLoading(false);
-    }
-  });
-
-  els.btnStart?.addEventListener('click', async () => {
-    try {
-      setLoading(true);
-
-      const projectId = getSelectedProjectId();
-      if (!projectId) {
-        showToast('Selecione um projeto antes de iniciar.');
-        return;
-      }
-
-      const started = await apiPost('/sessions/start', { projectId, goalId: null });
-      // started pode vir null se sua API retorna 204 -> então reconstruímos via dashboard-state
-      if (started?.startTimeUtc) startTimerFromUtc(started.startTimeUtc);
-
-      await reloadDashboardState();
-      showToast('Sessão iniciada.');
-    } catch (e) {
-      showToast(e.message || 'Erro ao iniciar sessão.');
-      try { await reloadDashboardState(); } catch {}
-    } finally {
-      setLoading(false);
-    }
-  });
-
-  els.btnStop?.addEventListener('click', async () => {
-    try {
-      setLoading(true);
-
-      await apiPost('/sessions/stop', null); // pode ser 204
-      stopTimerAndReset(true);
-
-      await reloadDashboardState();
-      showToast('Sessão finalizada.');
-    } catch (e) {
-      showToast(e.message || 'Erro ao finalizar sessão.');
-      try { await reloadDashboardState(); } catch {}
-    } finally {
-      setLoading(false);
-    }
-  });
-
-  els.btnCancel?.addEventListener('click', async () => {
-    try {
-      setLoading(true);
-
-      await apiPost('/sessions/cancel', null); // pode ser 204
-      stopTimerAndReset(true);
-
-      await reloadDashboardState();
-      showToast('Sessão cancelada.');
-    } catch (e) {
-      showToast(e.message || 'Erro ao cancelar sessão.');
-      try { await reloadDashboardState(); } catch {}
-    } finally {
-      setLoading(false);
-    }
-  });
-
-  // Boot
-  (async () => {
-    try {
-      setLoading(true);
-      await reloadDashboardState();
-    } catch (e) {
-      showToast(e.message || 'Erro ao carregar dashboard.');
-      stopTimerAndReset(true);
-      setStatus('stop');
-      setRingProgress(0);
-    } finally {
-      setLoading(false);
-    }
-  })();
-
-})();
-  </script>
 </body>
 </html>

@@ -31,12 +31,10 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// sem auth por enquanto
-// app.UseAuthentication();
-// app.UseAuthorization();
+app.UseAuthentication();   // 👈 importante
+app.UseAuthorization();    // 👈 importante
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapControllers();
+app.MapDefaultControllerRoute();
 
 app.Run();

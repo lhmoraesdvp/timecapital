@@ -107,10 +107,10 @@ public sealed class SessionService : ISessionService
     // =========================
     public async Task<DashboardStateDto> GetDashboardStateAsync(
         string userId,
+        Guid? selectedProjectId = null,
         CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
-
         var todayStart = new DateTimeOffset(now.Date, TimeSpan.Zero);
 
         var diff = ((int)now.DayOfWeek + 6) % 7;
@@ -122,7 +122,6 @@ public sealed class SessionService : ISessionService
             .SingleAsync(ct);
 
         string? defaultProjectTitle = null;
-
         if (defaultProjectId.HasValue)
         {
             defaultProjectTitle = await _db.Projects
@@ -148,55 +147,25 @@ public sealed class SessionService : ISessionService
                 s.StartTimeUtc))
             .SingleOrDefaultAsync(ct);
 
+        // Base: sessões concluídas (filtro do gráfico B entra aqui)
         var completed = _db.Sessions
             .Where(s => s.UserId == userId &&
                         s.EndTimeUtc != null &&
                         s.CanceledAtUtc == null);
 
-        // Totais globais
-        var globalToday = await completed
-            .Where(s => s.StartTimeUtc >= todayStart)
-            .SumAsync(s =>
-                EF.Functions.DateDiffSecond(
-                    s.StartTimeUtc,
-                    s.EndTimeUtc!.Value), ct);
-
-        var globalWeek = await completed
-            .Where(s => s.StartTimeUtc >= weekStart)
-            .SumAsync(s =>
-                EF.Functions.DateDiffSecond(
-                    s.StartTimeUtc,
-                    s.EndTimeUtc!.Value), ct);
-
-        int defaultProjectTotal = 0;
-        int projectTodayTotal = 0;
-        int projectWeekTotal = 0;
-
-        if (defaultProjectId.HasValue)
+        if (selectedProjectId.HasValue)
         {
-            defaultProjectTotal = await completed
-                .Where(s => s.ProjectId == defaultProjectId.Value)
-                .SumAsync(s =>
-                    EF.Functions.DateDiffSecond(
-                        s.StartTimeUtc,
-                        s.EndTimeUtc!.Value), ct);
-
-            projectTodayTotal = await completed
-                .Where(s => s.ProjectId == defaultProjectId.Value &&
-                            s.StartTimeUtc >= todayStart)
-                .SumAsync(s =>
-                    EF.Functions.DateDiffSecond(
-                        s.StartTimeUtc,
-                        s.EndTimeUtc!.Value), ct);
-
-            projectWeekTotal = await completed
-                .Where(s => s.ProjectId == defaultProjectId.Value &&
-                            s.StartTimeUtc >= weekStart)
-                .SumAsync(s =>
-                    EF.Functions.DateDiffSecond(
-                        s.StartTimeUtc,
-                        s.EndTimeUtc!.Value), ct);
+            completed = completed.Where(s => s.ProjectId == selectedProjectId.Value);
         }
+
+        // Totais (do projeto selecionado, modo B)
+        var todayTotal = await completed
+            .Where(s => s.StartTimeUtc >= todayStart)
+            .SumAsync(s => EF.Functions.DateDiffSecond(s.StartTimeUtc, s.EndTimeUtc!.Value), ct);
+
+        var weekTotal = await completed
+            .Where(s => s.StartTimeUtc >= weekStart)
+            .SumAsync(s => EF.Functions.DateDiffSecond(s.StartTimeUtc, s.EndTimeUtc!.Value), ct);
 
         var lastSessions = await completed
             .OrderByDescending(s => s.EndTimeUtc)
@@ -211,23 +180,79 @@ public sealed class SessionService : ISessionService
                     s.GoalId,
                     s.StartTimeUtc,
                     s.EndTimeUtc!.Value,
-                    EF.Functions.DateDiffSecond(
-                        s.StartTimeUtc,
-                        s.EndTimeUtc!.Value)
+                    EF.Functions.DateDiffSecond(s.StartTimeUtc, s.EndTimeUtc!.Value)
                 ))
             .ToListAsync(ct);
+
+        // =========================
+        // DISTRIBUIÇÃO DA SEMANA (global por projeto do usuário)
+        // =========================
+        var weekByProject = await _db.Sessions
+            .Where(s => s.UserId == userId &&
+                        s.EndTimeUtc != null &&
+                        s.CanceledAtUtc == null &&
+                        s.StartTimeUtc >= weekStart)
+            .GroupBy(s => s.ProjectId)
+            .Select(g => new
+            {
+                ProjectId = g.Key,
+                Seconds = g.Sum(x => EF.Functions.DateDiffSecond(x.StartTimeUtc, x.EndTimeUtc!.Value))
+            })
+            .OrderByDescending(x => x.Seconds)
+            .ToListAsync(ct);
+
+        var titles = await _db.Projects
+            .Where(p => p.OwnerId == userId)
+            .Select(p => new { p.Id, p.Title })
+            .ToDictionaryAsync(x => x.Id, x => x.Title, ct);
+
+        var projectTotals = weekByProject
+            .Select(x => new ProjectTotalDto(
+                x.ProjectId,
+                titles.GetValueOrDefault(x.ProjectId, "Sem título"),
+                x.Seconds
+            ))
+            .ToList();
+
+        // =========================
+        // ÚLTIMOS 7 DIAS (do projeto selecionado, modo B)
+        // =========================
+        var last7Start = todayStart.AddDays(-6);
+
+        var dayGroups = await completed
+            .Where(s => s.StartTimeUtc >= last7Start)
+            .GroupBy(s => s.StartTimeUtc.Date)
+            .Select(g => new
+            {
+                Day = g.Key, // DateTime
+                Seconds = g.Sum(x => EF.Functions.DateDiffSecond(x.StartTimeUtc, x.EndTimeUtc!.Value))
+            })
+            .ToListAsync(ct);
+
+        var dayDict = dayGroups.ToDictionary(x => x.Day, x => x.Seconds);
+
+        var last7Days = Enumerable.Range(0, 7)
+            .Select(i => last7Start.AddDays(i).UtcDateTime.Date) // DateTime (UTC date)
+            .Select(d =>
+            {
+                var seconds = dayDict.TryGetValue(d, out var v) ? v : 0;
+                return new DayTotalDto(DateOnly.FromDateTime(d), seconds);
+            })
+            .ToList();
 
         return new DashboardStateDto(
             defaultProjectId,
             defaultProjectTitle,
             projects,
             active,
-            defaultProjectTotal,
-            projectTodayTotal,
-            projectWeekTotal,
-            null,
+            0,              // DefaultProjectTotalSeconds (se quiser eu calculo depois)
+            todayTotal,
+            weekTotal,
+            null,           // ActiveGoalTargetSeconds
             lastSessions,
-            new List<ProjectTotalDto>()
+            projectTotals,
+            last7Days,
+            "v2-last7days"
         );
     }
 }

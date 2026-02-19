@@ -1,0 +1,23 @@
+# TimeCapital — Status Atual
+
+## O que já funciona
+- Cronômetro persistente baseado em StartTimeUtc (reconstrói após refresh)
+- Dashboard com dados reais
+- Totais por projeto
+- Últimas sessões
+- Goal ring SVG animado
+- Distribuição da semana (totalsByProject)
+
+## Rotas principais (MVP)
+- GET /dashboard-state
+- POST /sessions/start
+- POST /sessions/stop
+- POST /sessions/cancel
+- POST /projects/set-default
+- GET /projects (tela MVC - lista/criar)
+
+## Regras do MVP
+- Start/Stop (sem pause)
+- Apenas 1 sessão ativa por usuário
+- Stop grava sessão e soma horas
+- Cancel marca sessão como cancelada e não soma

@@ -1,3 +1,4 @@
+// TimeCapital.Application/Sessions/ISessionService.cs
 namespace TimeCapital.Application.Sessions;
 
 public interface ISessionService
@@ -16,7 +17,9 @@ public interface ISessionService
         string userId,
         CancellationToken ct = default);
 
+    // ATUALIZADO: aceita projectId opcional (modo B)
     Task<DashboardStateDto> GetDashboardStateAsync(
         string userId,
+        Guid? selectedProjectId = null,
         CancellationToken ct = default);
 }

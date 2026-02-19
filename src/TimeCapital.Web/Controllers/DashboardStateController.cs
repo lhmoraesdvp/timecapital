@@ -17,11 +17,14 @@ public sealed class DashboardStateController : ControllerBase
         _user = user;
     }
 
+    // GET /dashboard-state?projectId=<guid>
     [HttpGet("dashboard-state")]
-    public async Task<ActionResult<DashboardStateDto>> Get(CancellationToken ct)
+    public async Task<ActionResult<DashboardStateDto>> Get(
+        [FromQuery] Guid? projectId,
+        CancellationToken ct)
     {
         var userId = _user.GetUserId();
-        var dto = await _sessions.GetDashboardStateAsync(userId, ct);
+        var dto = await _sessions.GetDashboardStateAsync(userId, projectId, ct);
         return Ok(dto);
     }
 }

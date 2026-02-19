@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TimeCapital.Data")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b1547d1d469b7e2f4714abf7eb98630dc03b2954")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+89681d85c975f9da2eabc09d40acebe77ff48e56")]
 [assembly: System.Reflection.AssemblyProductAttribute("TimeCapital.Data")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TimeCapital.Data")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
