@@ -1,60 +1,61 @@
 using Microsoft.AspNetCore.Mvc;
-using TimeCapital.Application.Common;
 using TimeCapital.Application.Sessions;
-using TimeCapital.Web.Infrastructure;
 
 namespace TimeCapital.Web.Controllers;
 
 [ApiController]
 [Route("sessions")]
-public sealed class SessionsController : ControllerBase
+public class SessionsController : ControllerBase
 {
-    private readonly ISessionService _sessions;
-    private readonly IUserContext _user;
+    private readonly ISessionService _sessionService;
 
-    public SessionsController(ISessionService sessions, IUserContext user)
+    public SessionsController(ISessionService sessionService)
     {
-        _sessions = sessions;
-        _user = user;
+        _sessionService = sessionService;
     }
 
+    // =========================
+    // START
+    // =========================
     [HttpPost("start")]
-    public async Task<ActionResult<StartSessionResponse>> Start([FromBody] StartSessionRequest req, CancellationToken ct)
+    public async Task<IActionResult> Start(
+        [FromBody] StartSessionRequest request,
+        CancellationToken ct)
     {
-        try
-        {
-            var userId = _user.GetUserId();
-            var result = await _sessions.StartSessionAsync(userId, req, ct);
-            return Ok(result);
-        }
-        catch (ValidationException ex) { return BadRequest(new { message = ex.Message }); }
-        catch (ForbiddenException ex) { return StatusCode(403, new { message = ex.Message }); }
-        catch (NotFoundException ex) { return NotFound(new { message = ex.Message }); }
-        catch (ConflictException ex) { return Conflict(new { message = ex.Message }); }
+        var userId = "luis"; // ambiente local sem identity
+
+        var result = await _sessionService.StartSessionAsync(
+            userId,
+            request.ProjectId,
+            request.GoalId,
+            ct);
+
+        return Ok(result);
     }
 
+    // =========================
+    // STOP
+    // =========================
     [HttpPost("stop")]
-    public async Task<ActionResult<StopSessionResponse>> Stop(CancellationToken ct)
+    public async Task<IActionResult> Stop(CancellationToken ct)
     {
-        try
-        {
-            var userId = _user.GetUserId();
-            var result = await _sessions.StopSessionAsync(userId, ct);
-            return Ok(result);
-        }
-        catch (NotFoundException ex) { return NotFound(new { message = ex.Message }); }
-        catch (ValidationException ex) { return BadRequest(new { message = ex.Message }); }
+        var userId = "luis";
+
+        var result = await _sessionService.StopSessionAsync(userId, ct);
+
+        return Ok(result);
     }
 
+    // =========================
+    // CANCEL
+    // =========================
     [HttpPost("cancel")]
-    public async Task<ActionResult<CancelSessionResponse>> Cancel(CancellationToken ct)
+    public async Task<IActionResult> Cancel(CancellationToken ct)
     {
-        try
-        {
-            var userId = _user.GetUserId();
-            var result = await _sessions.CancelActiveSessionAsync(userId, ct);
-            return Ok(result);
-        }
-        catch (NotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        var userId = "luis";
+
+        await _sessionService.CancelActiveSessionAsync(userId, ct);
+
+        return Ok();
     }
 }
