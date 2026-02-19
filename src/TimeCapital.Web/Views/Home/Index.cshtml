@@ -1,5 +1,5 @@
 ﻿@{
-  Layout = null; // mantém como página inteira (como seu exemplo). Se você usa _Layout, pode remover isso.
+  Layout = null;
 }
 
 <!doctype html>
@@ -7,7 +7,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TimeCapital teste 1— Dashboard</title>
+  <title>TimeCapital — Dashboard</title>
 
   <style>
     :root{
@@ -124,7 +124,6 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
-    .pad{ padding: 18px; }
 
     .hero{
       display:grid;
@@ -325,6 +324,7 @@
       padding: 10px 14px;
       font-weight: 650;
       font-size: 13px;
+      min-width: 120px;
     }
     .btn:active{ transform: scale(.97); }
 
@@ -332,19 +332,16 @@
       background: linear-gradient(135deg, var(--start-main), var(--start-soft));
       box-shadow: 0 12px 26px rgba(52,211,153,.18);
       color:#fff;
-      min-width: 120px;
     }
     .btnStop{
       background: linear-gradient(135deg, var(--pause-main), var(--pause-soft));
       box-shadow: 0 12px 26px rgba(245,158,11,.18);
       color:#fff;
-      min-width: 120px;
     }
     .btnCancel{
       background: var(--reset-bg);
       box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
       color: var(--text-strong);
-      min-width: 120px;
     }
 
     .status{
@@ -392,15 +389,6 @@
 
     .chartPad{ padding: 6px 14px 14px; }
 
-    .legend{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px 10px;
-      margin-top: 10px;
-      font-size: 12px;
-      color: var(--text);
-    }
-
     .list{
       padding: 8px 14px 14px;
       display:flex;
@@ -415,18 +403,6 @@
       justify-content:space-between;
       align-items:center;
       background: rgba(248,250,252,.55);
-    }
-    .rowTitle{
-      font-weight:650;
-      font-size: 13px;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-    }
-    .rowSub{
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 2px;
     }
 
     .alert{
@@ -452,35 +428,35 @@
   <div class="wrap">
     <div class="top">
       <div class="brand">
-        <div class="kicker">TimeCapital • Dashboard (preview)</div>
-        <h1>Hoje é teste, com carinho: consistência.</h1>
-        <p class="subtitle">Um painel leve para iniciar uma sessão e enxergar seu ritmo. Sem ruído — só direção.</p>
+        <div class="kicker">TimeCapital • Dashboard (local dev)</div>
+        <h1>Consistência, sem ruído.</h1>
+        <p class="subtitle">Cronômetro persistente baseado no StartTimeUtc do backend. Refresh reconstrói sem depender de memória.</p>
       </div>
 
       <div class="chips" aria-label="Resumo rápido">
-        <div class="chip"><span class="dot"></span>Foco: <strong id="chipFocus">—</strong></div>
+        <div class="chip"><span class="dot"></span>Projeto: <strong id="chipFocus">—</strong></div>
         <div class="chip">Semana: <strong id="chipWeekTotal">—</strong></div>
         <div class="chip">Atualizado: <strong id="chipUpdated">—</strong></div>
       </div>
     </div>
 
     <div class="grid">
-      <!-- LEFT: HERO + WIDGET -->
-      <section class="card hero" aria-label="Hero e sessão atual">
+      <!-- LEFT -->
+      <section class="card hero" aria-label="Sessão atual">
         <div class="heroHeader">
           <div>
-            <div class="heroTitle">Resumo (placeholder)</div>
-            <div class="heroNote">No Passo 4, só conectamos estado real + ações Start/Stop/Cancel.</div>
+            <div class="heroTitle">Sessão (MVP)</div>
+            <div class="heroNote">Start/Stop/Cancel + cronômetro reconstituído pelo backend.</div>
           </div>
 
-          <div class="heroStat" aria-label="Total semanal">
+          <div class="heroStat" aria-label="Total semanal (mock)">
             <div class="label">Total (mock)</div>
             <div class="value" id="weekTotal">—</div>
             <div class="delta"><span class="miniDot"></span><span id="weekDelta">—</span></div>
           </div>
         </div>
 
-        <div class="widgetShell" role="group" aria-label="Sessão (estado real)">
+        <div class="widgetShell" role="group" aria-label="Timer">
           <div class="wHeader">
             <div class="area">
               <div class="label">Projeto</div>
@@ -492,13 +468,13 @@
               </div>
             </div>
 
-            <div class="today" aria-label="Sessão">
-              <div class="tlabel">Sessão</div>
+            <div class="today" aria-label="Estado">
+              <div class="tlabel">Estado</div>
               <div class="tvalue" id="todayDone">—</div>
             </div>
           </div>
 
-          <div class="ringWrap" aria-label="Estado visual">
+          <div class="ringWrap" aria-label="Cronômetro">
             <svg viewBox="0 0 300 300" aria-hidden="true">
               <defs>
                 <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -508,8 +484,6 @@
               </defs>
 
               <circle class="track" cx="150" cy="150" r="120"></circle>
-
-              <!-- sem cronômetro: só indica “ativa” vs “parada” -->
               <circle class="progress"
                       id="ringProgress"
                       cx="150" cy="150" r="120"
@@ -518,12 +492,12 @@
             </svg>
 
             <div class="center">
-              <div class="time" id="timeText">—</div>
-              <div class="meta" id="sessionStatus">Carregando estado…</div>
+              <div class="time" id="timeText">00:00:00</div>
+              <div class="meta" id="sessionStatus">Carregando…</div>
             </div>
           </div>
 
-          <div class="controls" aria-label="Ações (API)">
+          <div class="controls" aria-label="Ações">
             <button class="btn btnStart" id="btnStart" type="button">Start</button>
             <button class="btn btnStop d-none" id="btnStop" type="button">Stop</button>
             <button class="btn btnCancel d-none" id="btnCancel" type="button">Cancel</button>
@@ -538,19 +512,19 @@
         </div>
       </section>
 
-      <!-- RIGHT: mantém seus cards (mock por enquanto) -->
-      <aside class="side" aria-label="Gráficos e sessões">
-        <section class="card" aria-label="Distribuição por área (mock)">
+      <!-- RIGHT (mock, mantém espaço) -->
+      <aside class="side" aria-label="Painéis (mock)">
+        <section class="card" aria-label="Mock 1">
           <div class="cardHead">
             <h3>Distribuição (mock)</h3>
             <div class="hint">Esta semana</div>
           </div>
           <div class="chartPad">
-            <div class="alert">Esses gráficos ainda estão mockados. No Passo 5/6 a gente liga em dados reais.</div>
+            <div class="alert">Ainda mockado. O foco aqui é cronômetro persistente (Passo 5).</div>
           </div>
         </section>
 
-        <section class="card" aria-label="Horas por dia (mock)">
+        <section class="card" aria-label="Mock 2">
           <div class="cardHead">
             <h3>Horas por dia (mock)</h3>
             <div class="hint">Últimos 7 dias</div>
@@ -560,16 +534,16 @@
           </div>
         </section>
 
-        <section class="card" aria-label="Últimas sessões (mock)">
+        <section class="card" aria-label="Mock 3">
           <div class="cardHead">
             <h3>Últimas sessões (mock)</h3>
             <div class="hint">Hoje</div>
           </div>
-          <div class="list" id="sessionList">
+          <div class="list">
             <div class="row">
               <div style="min-width:0;">
-                <div class="rowTitle">—</div>
-                <div class="rowSub">Ainda não ligado</div>
+                <div style="font-weight:650; font-size:13px;">—</div>
+                <div style="font-size:11px; color: var(--muted); margin-top:2px;">Ainda não ligado</div>
               </div>
               <div style="font-weight:650;">—</div>
             </div>
@@ -604,9 +578,49 @@
 
       let state = null;
 
+      // ===== Timer persistente (Passo 5) =====
+      let timer = {
+        intervalId: null,
+        startUtcMs: null
+      };
+
+      function pad2(n){ return String(n).padStart(2,'0'); }
+
+      function formatHMS(totalSeconds){
+        const s = Math.max(0, Math.floor(totalSeconds));
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        const sec = s % 60;
+        return `${pad2(h)}:${pad2(m)}:${pad2(sec)}`;
+      }
+
+      function utcNowMs(){
+        return Date.now(); // epoch ms (absoluto)
+      }
+
+      function tick(){
+        if (timer.startUtcMs == null) return;
+        const elapsedSec = (utcNowMs() - timer.startUtcMs) / 1000;
+        els.timeText.textContent = formatHMS(elapsedSec);
+      }
+
+      function startTimerFromUtc(startTimeUtc){
+        if (timer.intervalId) clearInterval(timer.intervalId);
+        timer.startUtcMs = Date.parse(startTimeUtc);
+        tick(); // update imediato
+        timer.intervalId = setInterval(tick, 1000);
+      }
+
+      function stopTimerAndReset(){
+        if (timer.intervalId) clearInterval(timer.intervalId);
+        timer.intervalId = null;
+        timer.startUtcMs = null;
+        els.timeText.textContent = '00:00:00';
+      }
+      // ===== /Timer =====
+
       function nowText() {
         const d = new Date();
-        const pad2 = (n) => String(n).padStart(2,'0');
         return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
       }
 
@@ -689,12 +703,11 @@
       }
 
       function setStatus(active) {
-        // active = true/false
         els.status.classList.remove('stop','on');
         if (active) {
           els.status.classList.add('on');
           els.statusText.textContent = 'Ativo';
-          // ring cheio para “ativo”
+          // ring indica ativo (visual)
           els.ring.setAttribute('stroke-dashoffset', String(CIRC * 0.15));
         } else {
           els.status.classList.add('stop');
@@ -723,10 +736,13 @@
           els.btnCancel.classList.add('d-none');
 
           els.projectSelect.disabled = false;
+
           els.todayDone.textContent = '—';
-          els.timeText.textContent = '—';
           els.sessionStatus.textContent = 'Sem sessão ativa.';
           setStatus(false);
+
+          // Passo 5: sem sessão = 00:00:00 e sem interval
+          stopTimerAndReset();
           return;
         }
 
@@ -735,16 +751,17 @@
         els.btnStop.classList.remove('d-none');
         els.btnCancel.classList.remove('d-none');
 
-        // recomenda travar o dropdown enquanto tem sessão ativa (evita inconsistência)
+        // recomendado: travar dropdown com sessão ativa
         els.projectSelect.disabled = true;
 
         els.todayDone.textContent = 'Ativa';
-        els.timeText.textContent = '—';
+        setStatus(true);
 
-        // sem cronômetro: só mostramos startTimeUtc como referência
+        // Passo 5: iniciar/reconstruir timer pela fonte do backend
+        startTimerFromUtc(active.startTimeUtc);
+
         const startIso = new Date(active.startTimeUtc).toISOString();
         els.sessionStatus.textContent = `Sessão ativa desde (UTC): ${startIso}`;
-        setStatus(true);
       }
 
       async function reloadDashboardState() {
@@ -775,17 +792,22 @@
       els.btnStart.addEventListener('click', async () => {
         try {
           setLoading(true);
+
           const projectId = getSelectedProjectId();
           if (!projectId) {
             showToast('Selecione um projeto antes de iniciar.');
             return;
           }
-          await apiPost('/sessions/start', { projectId, goalId: null });
+
+          // Passo 5: Start retorna startTimeUtc (fonte imediata)
+          const started = await apiPost('/sessions/start', { projectId, goalId: null });
+          startTimerFromUtc(started.startTimeUtc);
+
           await reloadDashboardState();
           showToast('Sessão iniciada.');
         } catch (e) {
           showToast(e.message || 'Erro ao iniciar sessão.');
-          await reloadDashboardState();
+          await reloadDashboardState(); // reconstrói
         } finally {
           setLoading(false);
         }
@@ -795,6 +817,10 @@
         try {
           setLoading(true);
           await apiPost('/sessions/stop', null);
+
+          // Passo 5: parar timer e zerar
+          stopTimerAndReset();
+
           await reloadDashboardState();
           showToast('Sessão finalizada.');
         } catch (e) {
@@ -809,6 +835,10 @@
         try {
           setLoading(true);
           await apiPost('/sessions/cancel', null);
+
+          // Passo 5: parar timer e zerar
+          stopTimerAndReset();
+
           await reloadDashboardState();
           showToast('Sessão cancelada.');
         } catch (e) {
@@ -826,6 +856,8 @@
           await reloadDashboardState();
         } catch (e) {
           showToast(e.message || 'Erro ao carregar dashboard-state.');
+          stopTimerAndReset();
+          setStatus(false);
         } finally {
           setLoading(false);
         }
