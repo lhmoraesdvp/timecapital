@@ -226,19 +226,41 @@ namespace TimeCapital.Data.Migrations
 
             modelBuilder.Entity("TimeCapital.Domain.Entities.Area", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Color")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Areas");
+                    b.HasIndex("UserId", "NormalizedName")
+                        .IsUnique();
+
+                    b.ToTable("Areas", (string)null);
                 });
 
             modelBuilder.Entity("TimeCapital.Domain.Entities.Goal", b =>
@@ -252,12 +274,15 @@ namespace TimeCapital.Data.Migrations
                     b.Property<int>("AreaId")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("AreaId1")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("TargetMinutes")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AreaId");
+                    b.HasIndex("AreaId1");
 
                     b.ToTable("Goals");
                 });
@@ -273,6 +298,9 @@ namespace TimeCapital.Data.Migrations
                     b.Property<int>("AreaId")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("AreaId1")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("int");
 
@@ -281,7 +309,7 @@ namespace TimeCapital.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AreaId");
+                    b.HasIndex("AreaId1");
 
                     b.ToTable("Sessions");
                 });
@@ -341,9 +369,7 @@ namespace TimeCapital.Data.Migrations
                 {
                     b.HasOne("TimeCapital.Domain.Entities.Area", "Area")
                         .WithMany()
-                        .HasForeignKey("AreaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("AreaId1");
 
                     b.Navigation("Area");
                 });
@@ -351,17 +377,10 @@ namespace TimeCapital.Data.Migrations
             modelBuilder.Entity("TimeCapital.Domain.Entities.Session", b =>
                 {
                     b.HasOne("TimeCapital.Domain.Entities.Area", "Area")
-                        .WithMany("Sessions")
-                        .HasForeignKey("AreaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("AreaId1");
 
                     b.Navigation("Area");
-                });
-
-            modelBuilder.Entity("TimeCapital.Domain.Entities.Area", b =>
-                {
-                    b.Navigation("Sessions");
                 });
 #pragma warning restore 612, 618
         }

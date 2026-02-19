@@ -1,0 +1,35 @@
+@model List<TimeCapital.Domain.Entities.Area>
+
+@{
+    ViewData["Title"] = "Áreas";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="m-0">Áreas</h2>
+    <a class="btn btn-primary" href="/areas/create">Nova Área</a>
+</div>
+
+@if (TempData["Success"] is string msg)
+{
+    <div class="alert alert-success">@msg</div>
+}
+
+@if (!Model.Any())
+{
+    <div class="alert alert-light border">Nenhuma área criada ainda.</div>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var a in Model)
+        {
+            <div class="list-group-item d-flex align-items-center justify-content-between">
+                <div class="fw-semibold">@a.Name</div>
+                @if (!string.IsNullOrWhiteSpace(a.Color))
+                {
+                    <span class="badge bg-secondary">@a.Color</span>
+                }
+            </div>
+        }
+    </div>
+}
