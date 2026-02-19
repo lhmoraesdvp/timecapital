@@ -17,6 +17,10 @@
       "PackagePath": "staticwebassets\\js\\site.js"
     },
     {
+      "Id": "E:\\repo\\timecapital\\src\\TimeCapital.Web\\wwwroot\\landing\\index.html",
+      "PackagePath": "staticwebassets\\landing\\index.html"
+    },
+    {
       "Id": "E:\\repo\\timecapital\\src\\TimeCapital.Web\\wwwroot\\lib\\bootstrap\\LICENSE",
       "PackagePath": "staticwebassets\\lib\\bootstrap"
     },

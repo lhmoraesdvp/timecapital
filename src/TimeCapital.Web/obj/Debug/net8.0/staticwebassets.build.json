@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "wE8tPim2o8W7GdkTTUQztYkxe+9AwP5DmukxyvRTK8w=",
+  "Hash": "Sm2EQvECpbHq3OmWFrXHEIA7tjZWp17moH7QbZXkdz8=",
   "Source": "TimeCapital.Web",
   "BasePath": "_content/TimeCapital.Web",
   "Mode": "Default",
@@ -1250,6 +1250,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\js\\site.js"
+    },
+    {
+      "Identity": "E:\\repo\\timecapital\\src\\TimeCapital.Web\\wwwroot\\landing\\index.html",
+      "SourceId": "TimeCapital.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\repo\\timecapital\\src\\TimeCapital.Web\\wwwroot\\",
+      "BasePath": "_content/TimeCapital.Web",
+      "RelativePath": "landing/index.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\landing\\index.html"
     },
     {
       "Identity": "E:\\repo\\timecapital\\src\\TimeCapital.Web\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.css",
