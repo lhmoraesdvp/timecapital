@@ -1,115 +1,37 @@
-# TimeCapital
+# 📊 Estado Atual — v1.02
 
-TimeCapital é um SaaS minimalista focado em consistência e anti-procrastinação.
+O TimeCapital encontra-se estável na versão 1.02.
 
-Stack:
-- ASP.NET Core 8
+## Funcionalidades Implementadas
+
+- Start / Stop / Cancel de sessões
+- Uma sessão ativa por usuário
+- Dashboard reconstruído via API
+- Filtro consistente por projeto
+- Totais:
+  - Hoje
+  - Semana
+  - Últimas sessões
+  - Últimos 7 dias (compatível SQL Server)
+
+## Arquitetura Atual
+
+Backend:
+- .NET 8
 - EF Core
 - SQL Server
-- MVC + API híbrido
-- JS Vanilla (sem framework)
 
----
+Frontend:
+- Razor View
+- JavaScript Vanilla
+- Estado reconstruído via GET `/dashboard-state`
 
-# 🚀 Como rodar
+## Estratégia de Estado
 
-```bash
-dotnet restore
-dotnet build
-dotnet run
+O sistema não depende de memória do navegador.
+Toda renderização é baseada na resposta da API.
 
-
-🧠 Conceito do MVP
-
-Regras principais:
-
-Apenas 1 sessão ativa por usuário
-
-Start / Stop (sem pause)
-
-Stop grava sessão e soma horas
-
-Cancel não soma horas
-
-Sessão sobrevive refresh (baseado em StartTimeUtc)
-
-Projeto padrão selecionável
-
-🔗 Rotas importantes
-Dashboard
-
-GET /dashboard-state
-
-Sessões
-
-POST /sessions/start
-
-POST /sessions/stop
-
-POST /sessions/cancel
-
-Projetos (API)
-
-POST /projects/set-default
-
-Projetos (MVC)
-
-GET /projects → Tela de cadastro/listagem
-
-POST /projects → Criar projeto
-
-📂 Estrutura relevante
-TimeCapital.Web
- ├─ Controllers
- │   ├─ DashboardStateController (API)
- │   ├─ ProjectsController (API)
- │   ├─ ProjectsPageController (MVC)
- │
- ├─ Views
- │   ├─ ProjectsPage
- │   │   └─ Index.cshtml
- │   └─ Dashboard.cshtml
-
-✅ O que já funciona
-
-Cronômetro persistente
-
-Reconstrução via backend
-
-Totais por projeto
-
-Últimas sessões
-
-Distribuição semanal (totalsByProject)
-
-Tela MVC de projetos com criação
-
-🔜 Próximos passos sugeridos
-
-Editar / excluir projetos
-
-Definir projeto padrão na tela MVC
-
-Meta (Goal) por projeto
-
-Relatório semanal detalhado
-
-Autenticação real + multi-user
-
-Melhorar layout unificado (Layout.cshtml)
-
-🎯 Objetivo
-
-Manter arquitetura simples.
-Evoluir funcionalidade sem quebrar regras centrais do MVP.
-
-
----
-
-Agora seu projeto está:
-
-✔ Documentado  
-✔ Estruturado  
-✔ Transferível para outro chat  
-✔ Profissional  
-
+Isso garante:
+- Refresh seguro
+- Consistência de dados
+- Backend determinístico
