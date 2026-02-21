@@ -549,23 +549,23 @@
 
       <!-- RIGHT -->
       <aside class="side" aria-label="Painéis (mock)">
-        <section class="card" aria-label="Mock 1">
+        <section class="card" aria-label="Distribuição">
           <div class="cardHead">
-            <h3>Distribuição (mock)</h3>
+            <h3>Distribuição</h3>
             <div class="hint">Esta semana</div>
           </div>
           <div class="chartPad">
-            <div class="alert">Ainda mockado. O foco aqui é cronômetro persistente.</div>
+            <div id="distWeek"></div>
           </div>
         </section>
 
-        <section class="card" aria-label="Mock 2">
+        <section class="card" aria-label="Horas por dia">
           <div class="cardHead">
-            <h3>Horas por dia (mock)</h3>
+            <h3>Horas por dia</h3>
             <div class="hint">Últimos 7 dias</div>
           </div>
           <div class="chartPad">
-            <div class="alert">Mock.</div>
+            <div id="hours7"></div>
           </div>
         </section>
 
@@ -605,6 +605,10 @@
     toastArea: document.getElementById('toastArea'),
 
     ring: document.getElementById('ringProgress'),
+
+    // IMPORTANT: containers dos gráficos
+    distWeek: document.getElementById('distWeek'),
+    hours7: document.getElementById('hours7'),
   };
 
   const CIRC = 754;
@@ -694,7 +698,7 @@
 
   // ===== API (safe for empty response body / 204) =====
   async function handleResponse(res) {
-    const text = await res.text(); // pode vir vazio (204)
+    const text = await res.text();
     let data = null;
     try { data = text ? JSON.parse(text) : null; } catch {}
 
@@ -714,7 +718,7 @@
     const res = await fetch(url, {
       method:'POST',
       headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body: bodyObj ? JSON.stringify(bodyObj) : '{}' // mantém compatível
+      body: bodyObj ? JSON.stringify(bodyObj) : '{}'
     });
     return handleResponse(res);
   }
@@ -790,6 +794,66 @@
     }).join('');
   }
 
+  // ===== Widgets reais (Distribuição / 7 dias) =====
+  function barRow(label, seconds, maxSeconds) {
+    const pct = maxSeconds > 0 ? Math.round((seconds / maxSeconds) * 100) : 0;
+    const time = secondsToHhMm(seconds);
+
+    return `
+      <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <div style="font-size:12px; color: var(--text-strong); font-weight:650; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            ${escapeHtml(label)}
+          </div>
+          <div style="font-size:12px; color: var(--text-strong); font-weight:650; white-space:nowrap;">
+            ${time}
+          </div>
+        </div>
+
+        <div style="height:10px; border-radius:999px; background: var(--track); overflow:hidden; border:1px solid var(--border);">
+          <div style="height:100%; width:${pct}%; border-radius:999px; background: linear-gradient(90deg, rgba(244,114,128,0.75), rgba(52,211,153,0.70));"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderDistributionWeek(totalsByProject) {
+    if (!els.distWeek) return;
+
+    if (!totalsByProject || totalsByProject.length === 0) {
+      els.distWeek.innerHTML = `<div class="alert">Sem dados esta semana.</div>`;
+      return;
+    }
+
+    const top = totalsByProject.slice(0, 6);
+    const maxSeconds = Math.max(...top.map(x => x.totalSeconds ?? 0), 0);
+
+    els.distWeek.innerHTML = top
+      .map(x => barRow(x.projectTitle ?? 'Sem título', x.totalSeconds ?? 0, maxSeconds))
+      .join('');
+  }
+
+  function renderHoursLast7Days(last7Days) {
+    if (!els.hours7) return;
+
+    if (!last7Days || last7Days.length === 0) {
+      els.hours7.innerHTML = `<div class="alert">Sem dados nos últimos 7 dias.</div>`;
+      return;
+    }
+
+    const normalized = last7Days.map(x => {
+      const d = new Date(x.day + "T00:00:00");
+      const label = isNaN(d.getTime()) ? String(x.day) : d.toLocaleDateString();
+      return { label, seconds: x.totalSeconds ?? 0 };
+    });
+
+    const maxSeconds = Math.max(...normalized.map(x => x.seconds), 0);
+
+    els.hours7.innerHTML = normalized
+      .map(x => barRow(x.label, x.seconds, maxSeconds))
+      .join('');
+  }
+
   function renderTotals(st){
     const weekTxt = secondsToHhMm(st.weekTotalSeconds ?? 0);
     const todayTxt = secondsToHhMm(st.todayTotalSeconds ?? 0);
@@ -807,13 +871,14 @@
   }
 
   function renderState(st){
-    // st esperado:
-    // { defaultProjectId, defaultProjectTitle, projects[], weekTotalSeconds, todayTotalSeconds, activeGoalTargetSeconds?, activeSession?, lastSessions[] }
     renderProjects(st.projects, st.defaultProjectId);
     renderTotals(st);
     renderLastSessions(st.lastSessions);
 
-    // chip nome do projeto default (se vier)
+    // ✅ novos cards (reais)
+    renderDistributionWeek(st.totalsByProject);
+    renderHoursLast7Days(st.last7Days);
+
     if (els.chipFocus) {
       const title =
         st.defaultProjectTitle ??
@@ -835,7 +900,6 @@
       stopTimerAndReset(true);
       setStatus('stop');
 
-      // ring = progresso do dia/meta (ou 0 se não tiver meta)
       if (st.activeGoalTargetSeconds && st.activeGoalTargetSeconds > 0) {
         setRingProgress((st.todayTotalSeconds ?? 0) / st.activeGoalTargetSeconds);
       } else {
@@ -844,7 +908,6 @@
       return;
     }
 
-    // Sessão ativa
     els.btnStart?.classList.add('d-none');
     els.btnStop?.classList.remove('d-none');
     els.btnCancel?.classList.remove('d-none');
@@ -860,15 +923,17 @@
       setRingProgress(0.85);
     }
   }
-async function reloadDashboardState(){
-  const projectId = getSelectedProjectId();
-  const url = projectId
-    ? `/dashboard-state?projectId=${encodeURIComponent(projectId)}`
-    : `/dashboard-state`;
 
-  const st = await apiGet(url);
-  renderState(st);
-}
+  async function reloadDashboardState(){
+    const projectId = getSelectedProjectId();
+    const url = projectId
+      ? `/dashboard-state?projectId=${encodeURIComponent(projectId)}`
+      : `/dashboard-state`;
+
+    const st = await apiGet(url);
+    renderState(st);
+  }
+
   // ===== Events =====
   els.projectSelect?.addEventListener('change', async () => {
     try {
@@ -877,16 +942,12 @@ async function reloadDashboardState(){
       const projectId = getSelectedProjectId();
       if (!projectId) return;
 
-      // pode retornar 204 (sem body) -> ok
       await apiPost('/projects/set-default', { projectId });
-
-      // IMPORTANT: totais devem vir filtrados pelo projeto default após esse POST
       await reloadDashboardState();
 
       showToast('Projeto padrão atualizado.');
     } catch (e) {
       showToast(e.message || 'Erro ao trocar projeto.');
-      // tenta reconstruir estado mesmo em erro
       try { await reloadDashboardState(); } catch {}
     } finally {
       setLoading(false);
@@ -904,7 +965,6 @@ async function reloadDashboardState(){
       }
 
       const started = await apiPost('/sessions/start', { projectId, goalId: null });
-      // started pode vir null se sua API retorna 204 -> então reconstruímos via dashboard-state
       if (started?.startTimeUtc) startTimerFromUtc(started.startTimeUtc);
 
       await reloadDashboardState();
@@ -921,7 +981,7 @@ async function reloadDashboardState(){
     try {
       setLoading(true);
 
-      await apiPost('/sessions/stop', null); // pode ser 204
+      await apiPost('/sessions/stop', null);
       stopTimerAndReset(true);
 
       await reloadDashboardState();
@@ -938,7 +998,7 @@ async function reloadDashboardState(){
     try {
       setLoading(true);
 
-      await apiPost('/sessions/cancel', null); // pode ser 204
+      await apiPost('/sessions/cancel', null);
       stopTimerAndReset(true);
 
       await reloadDashboardState();
