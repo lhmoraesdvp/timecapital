@@ -23,6 +23,7 @@ public sealed class SessionService : ISessionService
         CancellationToken ct = default)
     {
         var project = await _db.Projects
+            .AsNoTracking()
             .Where(p => p.Id == projectId && p.OwnerId == userId)
             .SingleOrDefaultAsync(ct);
 
@@ -30,6 +31,7 @@ public sealed class SessionService : ISessionService
             throw new InvalidOperationException("Projeto inválido.");
 
         var hasActive = await _db.Sessions
+            .AsNoTracking()
             .AnyAsync(s => s.UserId == userId &&
                            s.EndTimeUtc == null &&
                            s.CanceledAtUtc == null, ct);
@@ -111,32 +113,47 @@ public sealed class SessionService : ISessionService
         CancellationToken ct = default)
     {
         var now = DateTimeOffset.UtcNow;
-        var todayStart = new DateTimeOffset(now.Date, TimeSpan.Zero);
 
-        var diff = ((int)now.DayOfWeek + 6) % 7;
-        var weekStart = new DateTimeOffset(now.Date.AddDays(-diff), TimeSpan.Zero);
+        // Início do dia/semana em UTC
+        var todayStart = new DateTimeOffset(now.UtcDateTime.Date, TimeSpan.Zero);
+        var diff = ((int)now.DayOfWeek + 6) % 7; // Monday=0
+        var weekStart = new DateTimeOffset(now.UtcDateTime.Date.AddDays(-diff), TimeSpan.Zero);
 
+        // Preferência (pode ser null)
         var defaultProjectId = await _db.Users
+            .AsNoTracking()
             .Where(u => u.Id == userId)
             .Select(u => u.DefaultProjectId)
             .SingleAsync(ct);
 
-        string? defaultProjectTitle = null;
-        if (defaultProjectId.HasValue)
-        {
-            defaultProjectTitle = await _db.Projects
-                .Where(p => p.Id == defaultProjectId.Value)
-                .Select(p => p.Title)
-                .SingleOrDefaultAsync(ct);
-        }
-
+        // Lista de projetos
         var projects = await _db.Projects
+            .AsNoTracking()
             .Where(p => p.OwnerId == userId)
             .OrderBy(p => p.Title)
             .Select(p => new ProjectListItemDto(p.Id, p.Title))
             .ToListAsync(ct);
 
+        // Projeto efetivo: query > default > primeiro projeto
+        Guid? effectiveProjectId =
+            selectedProjectId
+            ?? defaultProjectId
+            ?? projects.FirstOrDefault()?.Id;
+
+        // Título do default (para exibição)
+        string? defaultProjectTitle = null;
+        if (defaultProjectId.HasValue)
+        {
+            defaultProjectTitle = await _db.Projects
+                .AsNoTracking()
+                .Where(p => p.Id == defaultProjectId.Value)
+                .Select(p => p.Title)
+                .SingleOrDefaultAsync(ct);
+        }
+
+        // Sessão ativa (não filtra por projeto)
         var active = await _db.Sessions
+            .AsNoTracking()
             .Where(s => s.UserId == userId &&
                         s.EndTimeUtc == null &&
                         s.CanceledAtUtc == null)
@@ -147,18 +164,20 @@ public sealed class SessionService : ISessionService
                 s.StartTimeUtc))
             .SingleOrDefaultAsync(ct);
 
-        // Base: sessões concluídas (filtro do gráfico B entra aqui)
-        var completed = _db.Sessions
+        // Base: sessões concluídas
+        IQueryable<Session> completed = _db.Sessions
+            .AsNoTracking()
             .Where(s => s.UserId == userId &&
                         s.EndTimeUtc != null &&
                         s.CanceledAtUtc == null);
 
-        if (selectedProjectId.HasValue)
+        // Filtro por projeto efetivo (modo B)
+        if (effectiveProjectId.HasValue)
         {
-            completed = completed.Where(s => s.ProjectId == selectedProjectId.Value);
+            completed = completed.Where(s => s.ProjectId == effectiveProjectId.Value);
         }
 
-        // Totais (do projeto selecionado, modo B)
+        // Totais
         var todayTotal = await completed
             .Where(s => s.StartTimeUtc >= todayStart)
             .SumAsync(s => EF.Functions.DateDiffSecond(s.StartTimeUtc, s.EndTimeUtc!.Value), ct);
@@ -167,10 +186,11 @@ public sealed class SessionService : ISessionService
             .Where(s => s.StartTimeUtc >= weekStart)
             .SumAsync(s => EF.Functions.DateDiffSecond(s.StartTimeUtc, s.EndTimeUtc!.Value), ct);
 
+        // Últimas sessões (já filtradas pelo projeto efetivo, se existir)
         var lastSessions = await completed
             .OrderByDescending(s => s.EndTimeUtc)
             .Take(10)
-            .Join(_db.Projects,
+            .Join(_db.Projects.AsNoTracking(),
                 s => s.ProjectId,
                 p => p.Id,
                 (s, p) => new LastSessionDto(
@@ -188,6 +208,7 @@ public sealed class SessionService : ISessionService
         // DISTRIBUIÇÃO DA SEMANA (global por projeto do usuário)
         // =========================
         var weekByProject = await _db.Sessions
+            .AsNoTracking()
             .Where(s => s.UserId == userId &&
                         s.EndTimeUtc != null &&
                         s.CanceledAtUtc == null &&
@@ -202,6 +223,7 @@ public sealed class SessionService : ISessionService
             .ToListAsync(ct);
 
         var titles = await _db.Projects
+            .AsNoTracking()
             .Where(p => p.OwnerId == userId)
             .Select(p => new { p.Id, p.Title })
             .ToDictionaryAsync(x => x.Id, x => x.Title, ct);
@@ -214,41 +236,50 @@ public sealed class SessionService : ISessionService
             ))
             .ToList();
 
-        // =========================
-        // ÚLTIMOS 7 DIAS (do projeto selecionado, modo B)
-        // =========================
-        var last7Start = todayStart.AddDays(-6);
+// =========================
+// ÚLTIMOS 7 DIAS (projeto efetivo)
+// =========================
+var last7Start = todayStart.AddDays(-6);
 
-        var dayGroups = await completed
-            .Where(s => s.StartTimeUtc >= last7Start)
-            .GroupBy(s => s.StartTimeUtc.Date)
-            .Select(g => new
-            {
-                Day = g.Key, // DateTime
-                Seconds = g.Sum(x => EF.Functions.DateDiffSecond(x.StartTimeUtc, x.EndTimeUtc!.Value))
-            })
-            .ToListAsync(ct);
+// Agrupa por componentes de data (traduzível pelo EF)
+var dayGroups = await completed
+    .Where(s => s.StartTimeUtc >= last7Start)
+    .GroupBy(s => new
+    {
+        s.StartTimeUtc.Year,
+        s.StartTimeUtc.Month,
+        s.StartTimeUtc.Day
+    })
+    .Select(g => new
+    {
+        Day = new DateTime(g.Key.Year, g.Key.Month, g.Key.Day), // DateTime UTC
+        Seconds = g.Sum(x => EF.Functions.DateDiffSecond(x.StartTimeUtc, x.EndTimeUtc!.Value))
+    })
+    .ToListAsync(ct);
 
-        var dayDict = dayGroups.ToDictionary(x => x.Day, x => x.Seconds);
+// Dicionário para lookup rápido
+var dayDict = dayGroups
+    .ToDictionary(x => x.Day.Date, x => x.Seconds);
 
-        var last7Days = Enumerable.Range(0, 7)
-            .Select(i => last7Start.AddDays(i).UtcDateTime.Date) // DateTime (UTC date)
-            .Select(d =>
-            {
-                var seconds = dayDict.TryGetValue(d, out var v) ? v : 0;
-                return new DayTotalDto(DateOnly.FromDateTime(d), seconds);
-            })
-            .ToList();
+// Monta os 7 dias garantidos (mesmo que 0)
+var last7Days = Enumerable.Range(0, 7)
+    .Select(i => last7Start.AddDays(i).UtcDateTime.Date)
+    .Select(d =>
+    {
+        var seconds = dayDict.TryGetValue(d, out var v) ? v : 0;
+        return new DayTotalDto(DateOnly.FromDateTime(d), seconds);
+    })
+    .ToList();
 
         return new DashboardStateDto(
             defaultProjectId,
             defaultProjectTitle,
             projects,
             active,
-            0,              // DefaultProjectTotalSeconds (se quiser eu calculo depois)
+            0,      // DefaultProjectTotalSeconds (se quiser, calculamos depois)
             todayTotal,
             weekTotal,
-            null,           // ActiveGoalTargetSeconds
+            null,   // ActiveGoalTargetSeconds
             lastSessions,
             projectTotals,
             last7Days,

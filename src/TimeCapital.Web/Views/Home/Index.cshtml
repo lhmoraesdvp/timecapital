@@ -860,12 +860,15 @@
       setRingProgress(0.85);
     }
   }
+async function reloadDashboardState(){
+  const projectId = getSelectedProjectId();
+  const url = projectId
+    ? `/dashboard-state?projectId=${encodeURIComponent(projectId)}`
+    : `/dashboard-state`;
 
-  async function reloadDashboardState(){
-    const st = await apiGet('/dashboard-state');
-    renderState(st);
-  }
-
+  const st = await apiGet(url);
+  renderState(st);
+}
   // ===== Events =====
   els.projectSelect?.addEventListener('change', async () => {
     try {
