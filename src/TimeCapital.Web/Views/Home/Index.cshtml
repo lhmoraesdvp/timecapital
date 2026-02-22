@@ -549,7 +549,23 @@
         <div class="widgetShell" role="group" aria-label="Timer">
           <div class="wHeader">
             <div class="area">
-              <div class="label">Projeto</div>
+              <!-- ✅ label com botão de excluir projeto (novo) -->
+              <div class="label" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span>Projeto</span>
+
+                <button
+                  id="btnDeleteProject"
+                  type="button"
+                  title="Excluir projeto selecionado"
+                  aria-label="Excluir projeto selecionado"
+                  style="
+                    border:none; background:transparent; cursor:pointer;
+                    color: rgba(244,114,128,.95); font-weight:650;
+                    padding:6px 8px; border-radius:10px;
+                  "
+                >🗑️</button>
+              </div>
+
               <div class="selectV3c">
                 <select id="projectSelect" aria-label="Selecione o projeto">
                   <option value="">Carregando...</option>
@@ -664,6 +680,7 @@
 (() => {
   const els = {
     projectSelect: document.getElementById('projectSelect'),
+    btnDeleteProject: document.getElementById('btnDeleteProject'), // ✅ novo
     btnStart: document.getElementById('btnStart'),
     btnStop: document.getElementById('btnStop'),
     btnCancel: document.getElementById('btnCancel'),
@@ -803,14 +820,6 @@
     els.ring.setAttribute('stroke-dashoffset', String(CIRC * (1 - p)));
   }
 
-  function setLoading(isLoading){
-    if (els.projectSelect) els.projectSelect.disabled = isLoading;
-    if (els.btnStart) els.btnStart.disabled = isLoading;
-    if (els.btnStop) els.btnStop.disabled = isLoading;
-    if (els.btnCancel) els.btnCancel.disabled = isLoading;
-    if (modalEls.btnSave) modalEls.btnSave.disabled = isLoading;
-  }
-
   // ===== API =====
   async function handleResponse(res) {
     const text = await res.text();
@@ -847,6 +856,28 @@
   // guarda o último projeto válido (pra não quebrar o fluxo ao escolher "Adicionar…")
   let lastValidProjectId = null;
 
+  // ✅ estado do botão delete
+  function canDeleteSelectedProject() {
+    const v = els.projectSelect?.value;
+    return v && v !== 'null' && v !== '__add__';
+  }
+  function setDeleteButtonState(isLoading = false) {
+    if (!els.btnDeleteProject) return;
+    const disabled = isLoading || !canDeleteSelectedProject();
+    els.btnDeleteProject.disabled = disabled;
+    els.btnDeleteProject.style.opacity = disabled ? '0.35' : '1';
+    els.btnDeleteProject.style.cursor = disabled ? 'not-allowed' : 'pointer';
+  }
+
+  function setLoading(isLoading){
+    if (els.projectSelect) els.projectSelect.disabled = isLoading;
+    if (els.btnStart) els.btnStart.disabled = isLoading;
+    if (els.btnStop) els.btnStop.disabled = isLoading;
+    if (els.btnCancel) els.btnCancel.disabled = isLoading;
+    if (modalEls.btnSave) modalEls.btnSave.disabled = isLoading;
+    setDeleteButtonState(isLoading);
+  }
+
   function renderProjects(projects, defaultProjectId){
     if (!els.projectSelect) return;
 
@@ -865,6 +896,7 @@
       els.projectSelect.appendChild(addOpt);
 
       if (els.chipFocus) els.chipFocus.textContent = '—';
+      setDeleteButtonState(false);
       return;
     }
 
@@ -879,8 +911,25 @@
     addOpt.value = '__add__';
     addOpt.textContent = '+ Adicionar projeto…';
     els.projectSelect.appendChild(addOpt);
+let desired = keepCurrent || defaultProjectId || projects[0].id;
 
-    const desired = keepCurrent || defaultProjectId || projects[0].id;
+// se o id não existir mais (foi deletado)
+if (!projects.some(p => String(p.id) === String(desired))) {
+    desired = defaultProjectId && projects.some(p => String(p.id) === String(defaultProjectId))
+        ? defaultProjectId
+        : projects[0].id;
+}
+
+els.projectSelect.value = desired;
+
+// se o browser ainda deixar vazio, força o primeiro
+if (!els.projectSelect.value) {
+    els.projectSelect.value = projects[0].id;
+    desired = els.projectSelect.value;
+}
+
+lastValidProjectId = desired;
+    
     els.projectSelect.value = desired;
 
     // atualiza "último válido"
@@ -890,6 +939,8 @@
       const title = projects.find(x => x.id === desired)?.title ?? '—';
       els.chipFocus.textContent = title;
     }
+
+    setDeleteButtonState(false);
   }
 
   function renderLastSessions(list){
@@ -1157,7 +1208,7 @@
     });
   }
 
-  // ✅ Delete: delegação no container da lista
+  // ✅ Delete sessão: delegação no container da lista
   els.sessionList?.addEventListener('click', async (ev) => {
     const btn = ev.target?.closest?.('.btnDelSession');
     if (!btn) return;
@@ -1177,6 +1228,33 @@
       try { await reloadDashboardState(); } catch {}
     } finally {
       setLoading(false);
+    }
+  });
+
+  // ✅ Delete projeto (novo)
+  els.btnDeleteProject?.addEventListener('click', async () => {
+    const projectId = getSelectedProjectId();
+    if (!projectId) return;
+
+    if (!confirm('Excluir este projeto? (se houver sessões vinculadas, pode falhar)')) return;
+
+    try {
+      setLoading(true);
+
+      // endpoint novo no backend
+      await apiPost('/projects/delete', { projectId });
+
+// força o dashboard a pegar o NOVO default (sem projectId na URL)
+const st = await apiGet('/dashboard-state');
+renderState(st);
+showToast('Projeto excluído. Projeto padrão atualizado.');
+      showToast('Projeto excluído.');
+    } catch (e) {
+      showToast(e.message || 'Erro ao excluir projeto.');
+      try { await reloadDashboardState(); } catch {}
+    } finally {
+      setLoading(false);
+      setDeleteButtonState(false);
     }
   });
 
@@ -1231,6 +1309,8 @@
       } else {
         setRingProgress(0);
       }
+
+      setDeleteButtonState(false);
       return;
     }
 
@@ -1248,6 +1328,8 @@
     } else {
       setRingProgress(0.85);
     }
+
+    setDeleteButtonState(false);
   }
 
   async function reloadDashboardState(){
@@ -1268,12 +1350,15 @@
     if (raw === '__add__') {
       // volta para o último válido antes de abrir o modal
       if (els.projectSelect) els.projectSelect.value = lastValidProjectId || 'null';
+      setDeleteButtonState(false);
       openProjectModal();
       return;
     }
 
     // atualiza "último válido"
     if (raw && raw !== 'null') lastValidProjectId = raw;
+
+    setDeleteButtonState(false);
 
     try {
       setLoading(true);
@@ -1410,6 +1495,7 @@
       setRingProgress(0);
     } finally {
       setLoading(false);
+      setDeleteButtonState(false);
     }
   })();
 

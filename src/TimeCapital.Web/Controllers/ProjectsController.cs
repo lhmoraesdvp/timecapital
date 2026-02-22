@@ -23,6 +23,9 @@ public class ProjectsController : ControllerBase
     {
         var userId = "luis";
 
+        if (request.ProjectId == Guid.Empty)
+            return BadRequest("Projeto inválido.");
+
         var user = await _db.Users
             .SingleAsync(u => u.Id == userId, ct);
 
@@ -66,20 +69,65 @@ public class ProjectsController : ControllerBase
 
         _db.Projects.Add(project);
 
-        // Se quiser: se não tem default ainda, setar automaticamente
+        // Se não tem default ainda, seta automaticamente
         var user = await _db.Users.SingleAsync(u => u.Id == userId, ct);
         if (user.DefaultProjectId == null)
             user.DefaultProjectId = project.Id;
 
         await _db.SaveChangesAsync(ct);
 
-        // retorno que o front espera
+        // retorno que o front espera (id / title)
         return Ok(new CreateProjectResponse(project.Id, project.Title));
+    }
+
+    // ✅ NOVO: excluir projeto (sem cascade)
+    // Regra: se tiver sessões vinculadas -> 400
+    // Também limpa DefaultProjectId se for o projeto excluído.
+    [HttpPost("delete")]
+    public async Task<IActionResult> Delete(
+        [FromBody] DeleteProjectRequest request,
+        CancellationToken ct)
+    {
+        var userId = "luis";
+
+        if (request.ProjectId == Guid.Empty)
+            return BadRequest("Projeto inválido.");
+
+        // carrega projeto do usuário
+        var project = await _db.Projects
+            .SingleOrDefaultAsync(p => p.Id == request.ProjectId && p.OwnerId == userId, ct);
+
+        if (project is null)
+            return BadRequest("Projeto inválido.");
+
+        // bloqueia se existir sessão ligada ao projeto
+        // (ajuste o DbSet/nome se sua entidade não for "Sessions" ou não tiver ProjectId)
+var sessions = await _db.Sessions
+    .Where(s => s.ProjectId == request.ProjectId)
+    .ToListAsync(ct);
+
+_db.Sessions.RemoveRange(sessions);
+        // limpa default se estiver apontando para este projeto
+        var user = await _db.Users.SingleAsync(u => u.Id == userId, ct);
+if (user.DefaultProjectId == request.ProjectId)
+{
+    var nextProject = await _db.Projects
+        .Where(p => p.OwnerId == userId && p.Id != request.ProjectId)
+        .OrderBy(p => p.Title)
+        .Select(p => (Guid?)p.Id)
+        .FirstOrDefaultAsync(ct);
+
+    user.DefaultProjectId = nextProject; // pode ser null se não houver mais projetos
+}
+
+        _db.Projects.Remove(project);
+        await _db.SaveChangesAsync(ct);
+
+        return Ok();
     }
 }
 
 public record SetDefaultProjectRequest(Guid ProjectId);
-
 public record CreateProjectRequest(string Title);
-
 public record CreateProjectResponse(Guid Id, string Title);
+public record DeleteProjectRequest(Guid ProjectId);
