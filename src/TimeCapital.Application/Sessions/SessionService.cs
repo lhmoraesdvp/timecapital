@@ -286,4 +286,26 @@ var last7Days = Enumerable.Range(0, 7)
             "v2-last7days"
         );
     }
+        // =========================
+    // DELETE (novo)
+    // =========================
+    public async Task DeleteSessionAsync(
+        string userId,
+        Guid sessionId,
+        CancellationToken ct = default)
+    {
+        var session = await _db.Sessions
+            .Where(s => s.Id == sessionId && s.UserId == userId)
+            .SingleOrDefaultAsync(ct);
+
+        if (session == null)
+            throw new InvalidOperationException("Sessão não encontrada.");
+
+        // Recomendado: impedir excluir sessão ativa (em andamento)
+        if (session.EndTimeUtc == null && session.CanceledAtUtc == null)
+            throw new InvalidOperationException("Não é possível excluir uma sessão ativa. Pare ou cancele primeiro.");
+
+        _db.Sessions.Remove(session);
+        await _db.SaveChangesAsync(ct);
+    }
 }

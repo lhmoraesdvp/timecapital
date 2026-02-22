@@ -580,7 +580,7 @@
     </div>
   </div>
 
-  <script>
+<script>
 (() => {
   const els = {
     projectSelect: document.getElementById('projectSelect'),
@@ -606,7 +606,6 @@
 
     ring: document.getElementById('ringProgress'),
 
-    // containers dos widgets
     distWeek: document.getElementById('distWeek'),
     hours7: document.getElementById('hours7'),
   };
@@ -760,45 +759,62 @@
     }
   }
 
-  function renderLastSessions(list){
-    if (!els.sessionList) return;
+function renderLastSessions(list){
+  if (!els.sessionList) return;
 
-    if (!list || list.length === 0) {
-      els.sessionList.innerHTML = `
-        <div class="row">
-          <div class="rowLeft">
-            <span class="badge" style="background:rgba(148,163,184,.14); border-color:rgba(148,163,184,.20);"></span>
-            <div style="min-width:0;">
-              <div class="rowTitle">Nenhuma sessão ainda</div>
-              <div class="rowSub">Comece com Start 🙂</div>
-            </div>
+  if (!list || list.length === 0) {
+    els.sessionList.innerHTML = `
+      <div class="row">
+        <div class="rowLeft">
+          <span class="badge" style="background:rgba(148,163,184,.14); border-color:rgba(148,163,184,.20);"></span>
+          <div style="min-width:0;">
+            <div class="rowTitle">Nenhuma sessão ainda</div>
+            <div class="rowSub">Comece com Start 🙂</div>
           </div>
-          <div class="rowRight">—</div>
-        </div>`;
-      return;
-    }
-
-    els.sessionList.innerHTML = list.map(s => {
-      const endLocal = new Date(s.endTimeUtc).toLocaleString();
-      return `
-        <div class="row">
-          <div class="rowLeft">
-            <span class="badge"></span>
-            <div style="min-width:0;">
-              <div class="rowTitle">${escapeHtml(s.projectTitle)}</div>
-              <div class="rowSub">${escapeHtml(endLocal)}</div>
-            </div>
-          </div>
-          <div class="rowRight">${secondsToHhMm(s.durationSeconds)}</div>
-        </div>`;
-    }).join('');
+        </div>
+        <div class="rowRight">—</div>
+      </div>`;
+    return;
   }
 
+  els.sessionList.innerHTML = list.map(s => {
+    const endLocal = new Date(s.endTimeUtc).toLocaleString();
+    const sid = s.id ?? s.sessionId ?? s.Id; // tolerante ao nome do campo
+
+    return `
+      <div class="row">
+        <div class="rowLeft">
+          <span class="badge"></span>
+          <div style="min-width:0;">
+            <div class="rowTitle">${escapeHtml(s.projectTitle)}</div>
+            <div class="rowSub">${escapeHtml(endLocal)}</div>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="rowRight">${secondsToHhMm(s.durationSeconds)}</div>
+
+          ${sid ? `
+            <button
+              type="button"
+              class="btnDelSession"
+              data-id="${escapeHtml(sid)}"
+              title="Excluir sessão"
+              aria-label="Excluir sessão"
+              style="
+                border:none; background:transparent; cursor:pointer;
+                color: rgba(244,114,128,.95); font-weight:650;
+                padding:6px 8px; border-radius:10px;
+              "
+            >🗑️</button>
+          ` : ``}
+        </div>
+      </div>`;
+  }).join('');
+}
+
   // ============================================================
-  // ✅ Distribuição (mais atraente, sem quebrar o resto)
-  // - cor por projeto (estável)
-  // - % do total
-  // - medalha para top 3 (discreta)
+  // Distribuição
   // ============================================================
   function hashHue(str) {
     let h = 0;
@@ -891,7 +907,7 @@
   }
 
   // ============================================================
-  // ✅ Horas por dia (gráfico de barras em SVG + tooltip)
+  // Horas por dia
   // ============================================================
   function renderHoursLast7Days(last7Days) {
     if (!els.hours7) return;
@@ -911,7 +927,6 @@
 
     const maxSeconds = Math.max(...normalized.map(x => x.seconds), 0);
 
-    // SVG sizing responsivo via viewBox
     const W = 560;
     const H = 190;
     const padL = 18;
@@ -957,7 +972,6 @@
       `;
     }).join('');
 
-    // Tooltip (HTML overlay)
     const tooltipStyle = `
       position:absolute; left:0; top:0; transform:translate(-9999px,-9999px);
       padding:8px 10px; border-radius:12px;
@@ -1013,6 +1027,30 @@
     });
   }
 
+  // ✅ Delete: delegação no container da lista
+  els.sessionList?.addEventListener('click', async (ev) => {
+    const btn = ev.target?.closest?.('.btnDelSession');
+    if (!btn) return;
+
+    const id = btn.getAttribute('data-id');
+    if (!id) return;
+
+    if (!confirm('Excluir esta sessão?')) return;
+
+    try {
+      setLoading(true);
+      console.log("DELETE sessionId =>", id);
+      await apiPost('/sessions/delete', { sessionId: id });
+      await reloadDashboardState();
+      showToast('Sessão excluída.');
+    } catch (e) {
+      showToast(e.message || 'Erro ao excluir sessão.');
+      try { await reloadDashboardState(); } catch {}
+    } finally {
+      setLoading(false);
+    }
+  });
+
   function renderTotals(st){
     const weekTxt = secondsToHhMm(st.weekTotalSeconds ?? 0);
     const todayTxt = secondsToHhMm(st.todayTotalSeconds ?? 0);
@@ -1025,7 +1063,8 @@
 
     if (els.chipUpdated) {
       const d = new Date();
-      els.chipUpdated.textContent = `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+      els.chipUpdated.textContent =
+        `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
     }
   }
 
@@ -1034,7 +1073,6 @@
     renderTotals(st);
     renderLastSessions(st.lastSessions);
 
-    // ✅ widgets reais
     renderDistributionWeek(st.totalsByProject);
     renderHoursLast7Days(st.last7Days);
 
@@ -1186,6 +1224,6 @@
   })();
 
 })();
-  </script>
+</script>
 </body>
 </html>

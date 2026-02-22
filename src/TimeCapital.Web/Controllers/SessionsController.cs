@@ -58,4 +58,34 @@ public class SessionsController : ControllerBase
 
         return Ok();
     }
+
+    // =========================
+    // DELETE
+    // =========================
+    [HttpPost("delete")]
+    public async Task<IActionResult> Delete(
+        [FromBody] DeleteSessionRequest request,
+        CancellationToken ct)
+    {
+        var userId = "luis";
+
+        if (request is null || request.SessionId == Guid.Empty)
+            return BadRequest(new { message = "SessionId inválido." });
+
+        try
+        {
+            await _sessionService.DeleteSessionAsync(userId, request.SessionId, ct);
+            return Ok(new { ok = true });
+        }
+        catch (InvalidOperationException ex)
+        {
+            // evita 500 e devolve mensagem pro seu showToast()
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+}
+
+public sealed class DeleteSessionRequest
+{
+    public Guid SessionId { get; set; }
 }
