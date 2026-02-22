@@ -1,21 +1,25 @@
-# Roadmap — TimeCapital
+# 🚀 Roadmap — TimeCapital
 
-## Fase 0 — Fundação
-- Ambiente dev (SDK .NET, SQL Server, SSMS, GitHub)
-- Repo e branches (main/dev)
-- Estrutura inicial
+## 🟦 v1.05
+- Login com Identity
+- Cadastro de usuário
+- Perfil e configurações
 
-## Fase 1 — Base do sistema
-- Models: Area, Session, Goal
-- EF Core + Migrations
-- Identity (login/register)
+## 🟧 v1.1
+- Sistema de Metas (Goals)
+- Pomodoro opcional
+- Exportar sessões (CSV)
 
-## Fase 2 — MVP
-- Timer salva sessão
-- Dashboard com dados reais
-- Deploy Azure
+## 🟩 v1.2
+- Aplicativo Mobile (MAUI/Flutter)
+- Notificações push
+- Timer funcionando em background
 
-## Fase 3 — Produto
-- UX refinada
-- Notificações e relatórios
-- Plano de assinatura (futuro)
+## 🟪 v1.3
+- Integrações com Google / Outlook / Toggl
+- Webhooks de produtividade
+
+## 🟫 v1.4
+- Relatórios avançados
+- Comparativo semanal
+- KPI de consistência

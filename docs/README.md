@@ -1,37 +1,25 @@
-# 📊 Estado Atual — v1.02
+# 📚 Documentação Técnica — TimeCapital
 
-O TimeCapital encontra-se estável na versão 1.02.
+Bem-vindo aos documentos técnicos do projeto **TimeCapital**.
+Aqui você encontra toda a estrutura de arquitetura, API, fluxos,
+cálculos do dashboard e o roadmap oficial do projeto.
 
-## Funcionalidades Implementadas
+## Sumário
 
-- Start / Stop / Cancel de sessões
-- Uma sessão ativa por usuário
-- Dashboard reconstruído via API
-- Filtro consistente por projeto
-- Totais:
-  - Hoje
-  - Semana
-  - Últimas sessões
-  - Últimos 7 dias (compatível SQL Server)
+### 🔧 Arquitetura
+- [architecture.md](architecture.md)
 
-## Arquitetura Atual
+### 📊 Lógica do Dashboard
+- [dashboard-logic.md](dashboard-logic.md)
 
-Backend:
-- .NET 8
-- EF Core
-- SQL Server
+### 📡 API (Controllers)
+- [api.md](api.md)
 
-Frontend:
-- Razor View
-- JavaScript Vanilla
-- Estado reconstruído via GET `/dashboard-state`
+### 📈 Roadmap do Produto
+- [roadmap.md](roadmap.md)
 
-## Estratégia de Estado
+### 📝 Histórico de Versões
+- [changelog.md](changelog.md)
 
-O sistema não depende de memória do navegador.
-Toda renderização é baseada na resposta da API.
-
-Isso garante:
-- Refresh seguro
-- Consistência de dados
-- Backend determinístico
+### ☁ Deploy no Azure
+- [how-to-deploy-azure.md](how-to-deploy-azure.md)

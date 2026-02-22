@@ -32,3 +32,15 @@ Todas as mudanças relevantes do projeto TimeCapital serão documentadas aqui.
 - Implementação Start/Stop/Cancel.
 - Sessão persistente no banco.
 - Estrutura inicial do DTO de Dashboard.
+
+Gráfico semanal de distribuição (real)
+
+Gráfico últimos 7 dias (SVG premium)
+
+Melhorias de UI
+
+Correção do erro 500 ao parar sessão
+
+SessionService v2 estável
+
+DashboardState v2 completo

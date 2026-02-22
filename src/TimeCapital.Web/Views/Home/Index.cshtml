@@ -548,7 +548,7 @@
       </section>
 
       <!-- RIGHT -->
-      <aside class="side" aria-label="Painéis (mock)">
+      <aside class="side" aria-label="Painéis">
         <section class="card" aria-label="Distribuição">
           <div class="cardHead">
             <h3>Distribuição</h3>
@@ -606,7 +606,7 @@
 
     ring: document.getElementById('ringProgress'),
 
-    // IMPORTANT: containers dos gráficos
+    // containers dos widgets
     distWeek: document.getElementById('distWeek'),
     hours7: document.getElementById('hours7'),
   };
@@ -696,7 +696,7 @@
     if (els.btnCancel) els.btnCancel.disabled = isLoading;
   }
 
-  // ===== API (safe for empty response body / 204) =====
+  // ===== API =====
   async function handleResponse(res) {
     const text = await res.text();
     let data = null;
@@ -794,27 +794,29 @@
     }).join('');
   }
 
-  // ===== Widgets reais (Distribuição / 7 dias) =====
-  function barRow(label, seconds, maxSeconds) {
-    const pct = maxSeconds > 0 ? Math.round((seconds / maxSeconds) * 100) : 0;
-    const time = secondsToHhMm(seconds);
+  // ============================================================
+  // ✅ Distribuição (mais atraente, sem quebrar o resto)
+  // - cor por projeto (estável)
+  // - % do total
+  // - medalha para top 3 (discreta)
+  // ============================================================
+  function hashHue(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+    return h % 360;
+  }
 
-    return `
-      <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-          <div style="font-size:12px; color: var(--text-strong); font-weight:650; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-            ${escapeHtml(label)}
-          </div>
-          <div style="font-size:12px; color: var(--text-strong); font-weight:650; white-space:nowrap;">
-            ${time}
-          </div>
-        </div>
+  function colorsForProject(p) {
+    const key = String(p?.projectId || p?.projectTitle || 'x');
+    const hue = hashHue(key);
+    const c1 = `hsla(${hue}, 82%, 70%, .95)`;
+    const c2 = `hsla(${(hue + 34) % 360}, 78%, 62%, .95)`;
+    return { c1, c2 };
+  }
 
-        <div style="height:10px; border-radius:999px; background: var(--track); overflow:hidden; border:1px solid var(--border);">
-          <div style="height:100%; width:${pct}%; border-radius:999px; background: linear-gradient(90deg, rgba(244,114,128,0.75), rgba(52,211,153,0.70));"></div>
-        </div>
-      </div>
-    `;
+  function fmtPct01(p01){
+    const pct = Math.round(Math.max(0, Math.min(1, p01)) * 100);
+    return `${pct}%`;
   }
 
   function renderDistributionWeek(totalsByProject) {
@@ -826,13 +828,71 @@
     }
 
     const top = totalsByProject.slice(0, 6);
-    const maxSeconds = Math.max(...top.map(x => x.totalSeconds ?? 0), 0);
+    const maxSeconds = Math.max(...top.map(x => Number(x.totalSeconds ?? 0)), 0);
+    const sumSeconds = top.reduce((acc, x) => acc + Number(x.totalSeconds ?? 0), 0);
 
-    els.distWeek.innerHTML = top
-      .map(x => barRow(x.projectTitle ?? 'Sem título', x.totalSeconds ?? 0, maxSeconds))
-      .join('');
+    els.distWeek.innerHTML = top.map((x, idx) => {
+      const sec = Number(x.totalSeconds ?? 0);
+      const pctBar = maxSeconds > 0 ? Math.max(2, Math.round((sec / maxSeconds) * 100)) : 0;
+      const share = sumSeconds > 0 ? (sec / sumSeconds) : 0;
+
+      const { c1, c2 } = colorsForProject(x);
+      const medal =
+        idx === 0 ? "🏆" :
+        idx === 1 ? "🥈" :
+        idx === 2 ? "🥉" : "";
+
+      return `
+        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+              <span title="${escapeHtml(x.projectTitle ?? '')}"
+                style="
+                  width:10px; height:10px; border-radius:999px; flex:0 0 auto;
+                  background: linear-gradient(135deg, ${c1}, ${c2});
+                  box-shadow: 0 0 0 3px rgba(148,163,184,0.12);
+                "></span>
+
+              <div style="min-width:0;">
+                <div style="
+                  font-size:12px; color: var(--text-strong); font-weight:650;
+                  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+                ">
+                  ${medal ? `<span style="margin-right:6px;">${medal}</span>` : ""}
+                  ${escapeHtml(x.projectTitle ?? 'Sem título')}
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:baseline; gap:10px; flex:0 0 auto;">
+              <div style="font-size:12px; color: var(--text-strong); font-weight:650; white-space:nowrap;">
+                ${secondsToHhMm(sec)}
+              </div>
+              <div style="font-size:11px; color: var(--muted); font-weight:650; white-space:nowrap;">
+                ${fmtPct01(share)}
+              </div>
+            </div>
+          </div>
+
+          <div style="
+            height:10px; border-radius:999px; background: var(--track);
+            overflow:hidden; border:1px solid var(--border);
+          ">
+            <div style="
+              height:100%; width:${pctBar}%;
+              border-radius:999px;
+              background: linear-gradient(90deg, ${c1}, ${c2});
+              box-shadow: 0 10px 18px rgba(15,23,42,.06);
+            "></div>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
+  // ============================================================
+  // ✅ Horas por dia (gráfico de barras em SVG + tooltip)
+  // ============================================================
   function renderHoursLast7Days(last7Days) {
     if (!els.hours7) return;
 
@@ -843,15 +903,114 @@
 
     const normalized = last7Days.map(x => {
       const d = new Date(x.day + "T00:00:00");
-      const label = isNaN(d.getTime()) ? String(x.day) : d.toLocaleDateString();
-      return { label, seconds: x.totalSeconds ?? 0 };
+      const label = isNaN(d.getTime())
+        ? String(x.day)
+        : `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+      return { label, seconds: Number(x.totalSeconds ?? 0) };
     });
 
     const maxSeconds = Math.max(...normalized.map(x => x.seconds), 0);
 
-    els.hours7.innerHTML = normalized
-      .map(x => barRow(x.label, x.seconds, maxSeconds))
-      .join('');
+    // SVG sizing responsivo via viewBox
+    const W = 560;
+    const H = 190;
+    const padL = 18;
+    const padR = 18;
+    const padT = 14;
+    const padB = 34;
+
+    const chartW = W - padL - padR;
+    const chartH = H - padT - padB;
+
+    const n = normalized.length;
+    const gap = 10;
+    const barW = Math.floor((chartW - gap * (n - 1)) / n);
+    const baseY = padT + chartH;
+
+    function barHeight(seconds) {
+      if (maxSeconds <= 0) return 2;
+      const h = Math.round((seconds / maxSeconds) * (chartH - 10));
+      return Math.max(2, h);
+    }
+
+    const gridLines = [0.25, 0.5, 0.75].map(p => {
+      const y = padT + chartH - Math.round(p * (chartH - 10));
+      return `<line x1="${padL}" x2="${W - padR}" y1="${y}" y2="${y}"
+                   stroke="rgba(236,234,228,.75)" stroke-dasharray="4 6" />`;
+    }).join('');
+
+    const bars = normalized.map((x, i) => {
+      const xPos = padL + i * (barW + gap);
+      const h = barHeight(x.seconds);
+      const yPos = baseY - h;
+
+      return `
+        <g class="b" data-label="${escapeHtml(x.label)}" data-seconds="${x.seconds}">
+          <rect x="${xPos}" y="${yPos}" width="${barW}" height="${h}" rx="10" fill="url(#barsGrad)"></rect>
+          <rect x="${xPos}" y="${baseY}" width="${barW}" height="1" rx="1" fill="rgba(236,234,228,.9)"></rect>
+
+          <text x="${xPos + barW/2}" y="${H - 12}" text-anchor="middle"
+                font-size="11" fill="rgba(148,163,184,.95)" font-weight="520">
+            ${escapeHtml(x.label)}
+          </text>
+        </g>
+      `;
+    }).join('');
+
+    // Tooltip (HTML overlay)
+    const tooltipStyle = `
+      position:absolute; left:0; top:0; transform:translate(-9999px,-9999px);
+      padding:8px 10px; border-radius:12px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--border);
+      box-shadow: 0 14px 38px rgba(15, 23, 42, 0.08);
+      font-size:12px; color: var(--text-strong);
+      pointer-events:none;
+      white-space:nowrap;
+    `;
+
+    els.hours7.innerHTML = `
+      <div style="position:relative;">
+        <div id="hours7Tip" style="${tooltipStyle}"></div>
+
+        <svg viewBox="0 0 ${W} ${H}" width="100%" height="190" role="img" aria-label="Horas por dia (últimos 7 dias)">
+          <defs>
+            <linearGradient id="barsGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="rgba(244,114,128,.85)"></stop>
+              <stop offset="100%" stop-color="rgba(52,211,153,.80)"></stop>
+            </linearGradient>
+          </defs>
+
+          ${gridLines}
+          ${bars}
+        </svg>
+      </div>
+    `;
+
+    const tip = document.getElementById('hours7Tip');
+    const wrap = els.hours7.querySelector('div[style*="position:relative"]');
+
+    function fmtSeconds(sec){ return secondsToHhMm(sec); }
+
+    els.hours7.querySelectorAll('g.b').forEach(g => {
+      g.addEventListener('mousemove', (ev) => {
+        if (!tip || !wrap) return;
+        const label = g.getAttribute('data-label') || '';
+        const sec = Number(g.getAttribute('data-seconds') || 0);
+        tip.textContent = `${label} • ${fmtSeconds(sec)}`;
+
+        const r = wrap.getBoundingClientRect();
+        const x = ev.clientX - r.left + 12;
+        const y = ev.clientY - r.top - 36;
+
+        tip.style.transform = `translate(${x}px, ${Math.max(6,y)}px)`;
+      });
+
+      g.addEventListener('mouseleave', () => {
+        if (!tip) return;
+        tip.style.transform = `translate(-9999px,-9999px)`;
+      });
+    });
   }
 
   function renderTotals(st){
@@ -875,7 +1034,7 @@
     renderTotals(st);
     renderLastSessions(st.lastSessions);
 
-    // ✅ novos cards (reais)
+    // ✅ widgets reais
     renderDistributionWeek(st.totalsByProject);
     renderHoursLast7Days(st.last7Days);
 
