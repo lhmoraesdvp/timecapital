@@ -36,6 +36,8 @@
       --shadow: 0 14px 38px rgba(15, 23, 42, 0.06);
       --radius: 26px;
       --radius-sm: 18px;
+
+      --overlay: rgba(15, 23, 42, 0.45);
     }
 
     *{ box-sizing:border-box; }
@@ -456,6 +458,59 @@
       .grid{ grid-template-columns: 1fr; }
       .chips{ justify-content:flex-start; }
     }
+
+    /* =========================
+       Modal (novo)
+       ========================= */
+    .modalOverlay{
+      position: fixed;
+      inset: 0;
+      background: var(--overlay);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 9999;
+    }
+    .modalCard{
+      width: min(520px, 100%);
+      border-radius: 18px;
+      padding: 16px;
+    }
+    .modalTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .modalTitle{
+      font-weight:650;
+      font-size:14px;
+    }
+    .iconBtn{
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      font-size:18px;
+      padding:6px 10px;
+      border-radius:10px;
+    }
+    .input{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      outline:none;
+      font-size: 14px;
+      color: var(--text-strong);
+      background: #fff;
+    }
+    .modalActions{
+      display:flex;
+      gap: 10px;
+      justify-content:flex-end;
+      margin-top:14px;
+    }
   </style>
 </head>
 
@@ -580,6 +635,31 @@
     </div>
   </div>
 
+  <!-- =========================
+       Modal Novo Projeto (novo)
+       ========================= -->
+  <div id="projectModal" class="modalOverlay d-none" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
+    <div class="card modalCard">
+      <div class="modalTop">
+        <div class="modalTitle" id="projectModalTitle">Novo projeto</div>
+        <button id="btnCloseProjectModal" type="button" class="iconBtn" aria-label="Fechar">✕</button>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:6px;">
+          Nome do projeto
+        </label>
+        <input id="projectTitleInput" type="text" class="input" placeholder="Ex: Estudo, Trabalho, Academia..." />
+        <div id="projectModalError" class="d-none"></div>
+      </div>
+
+      <div class="modalActions">
+        <button id="btnCancelProjectModal" type="button" class="btn btnCancel" style="min-width:auto;">Cancelar</button>
+        <button id="btnSaveProjectModal" type="button" class="btn btnStart" style="min-width:auto;">Salvar</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 (() => {
   const els = {
@@ -609,6 +689,41 @@
     distWeek: document.getElementById('distWeek'),
     hours7: document.getElementById('hours7'),
   };
+
+  // ===== Modal (novo) =====
+  const modalEls = {
+    modal: document.getElementById('projectModal'),
+    btnClose: document.getElementById('btnCloseProjectModal'),
+    btnCancel: document.getElementById('btnCancelProjectModal'),
+    btnSave: document.getElementById('btnSaveProjectModal'),
+    input: document.getElementById('projectTitleInput'),
+    err: document.getElementById('projectModalError'),
+  };
+
+  function openProjectModal(){
+    if (!modalEls.modal) return;
+    modalEls.err?.classList.add('d-none');
+    if (modalEls.err) modalEls.err.innerHTML = '';
+    if (modalEls.input) modalEls.input.value = '';
+    modalEls.modal.classList.remove('d-none');
+    setTimeout(() => modalEls.input?.focus(), 0);
+  }
+
+  function closeProjectModal(){
+    modalEls.modal?.classList.add('d-none');
+  }
+
+  modalEls.btnClose?.addEventListener('click', closeProjectModal);
+  modalEls.btnCancel?.addEventListener('click', closeProjectModal);
+  modalEls.modal?.addEventListener('click', (e) => {
+    if (e.target === modalEls.modal) closeProjectModal();
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalEls.modal && !modalEls.modal.classList.contains('d-none')) {
+      closeProjectModal();
+    }
+  });
 
   const CIRC = 754;
 
@@ -693,6 +808,7 @@
     if (els.btnStart) els.btnStart.disabled = isLoading;
     if (els.btnStop) els.btnStop.disabled = isLoading;
     if (els.btnCancel) els.btnCancel.disabled = isLoading;
+    if (modalEls.btnSave) modalEls.btnSave.disabled = isLoading;
   }
 
   // ===== API =====
@@ -725,8 +841,11 @@
   // ===== Render =====
   function getSelectedProjectId() {
     const v = els.projectSelect?.value;
-    return v && v !== 'null' ? v : null;
+    return v && v !== 'null' && v !== '__add__' ? v : null;
   }
+
+  // guarda o último projeto válido (pra não quebrar o fluxo ao escolher "Adicionar…")
+  let lastValidProjectId = null;
 
   function renderProjects(projects, defaultProjectId){
     if (!els.projectSelect) return;
@@ -739,6 +858,12 @@
       opt.value = 'null';
       opt.textContent = 'Nenhum projeto';
       els.projectSelect.appendChild(opt);
+
+      const addOpt = document.createElement('option');
+      addOpt.value = '__add__';
+      addOpt.textContent = '+ Adicionar projeto…';
+      els.projectSelect.appendChild(addOpt);
+
       if (els.chipFocus) els.chipFocus.textContent = '—';
       return;
     }
@@ -750,8 +875,16 @@
       els.projectSelect.appendChild(opt);
     }
 
+    const addOpt = document.createElement('option');
+    addOpt.value = '__add__';
+    addOpt.textContent = '+ Adicionar projeto…';
+    els.projectSelect.appendChild(addOpt);
+
     const desired = keepCurrent || defaultProjectId || projects[0].id;
     els.projectSelect.value = desired;
+
+    // atualiza "último válido"
+    if (desired && desired !== 'null') lastValidProjectId = desired;
 
     if (els.chipFocus) {
       const title = projects.find(x => x.id === desired)?.title ?? '—';
@@ -759,59 +892,59 @@
     }
   }
 
-function renderLastSessions(list){
-  if (!els.sessionList) return;
+  function renderLastSessions(list){
+    if (!els.sessionList) return;
 
-  if (!list || list.length === 0) {
-    els.sessionList.innerHTML = `
-      <div class="row">
-        <div class="rowLeft">
-          <span class="badge" style="background:rgba(148,163,184,.14); border-color:rgba(148,163,184,.20);"></span>
-          <div style="min-width:0;">
-            <div class="rowTitle">Nenhuma sessão ainda</div>
-            <div class="rowSub">Comece com Start 🙂</div>
+    if (!list || list.length === 0) {
+      els.sessionList.innerHTML = `
+        <div class="row">
+          <div class="rowLeft">
+            <span class="badge" style="background:rgba(148,163,184,.14); border-color:rgba(148,163,184,.20);"></span>
+            <div style="min-width:0;">
+              <div class="rowTitle">Nenhuma sessão ainda</div>
+              <div class="rowSub">Comece com Start 🙂</div>
+            </div>
           </div>
-        </div>
-        <div class="rowRight">—</div>
-      </div>`;
-    return;
+          <div class="rowRight">—</div>
+        </div>`;
+      return;
+    }
+
+    els.sessionList.innerHTML = list.map(s => {
+      const endLocal = new Date(s.endTimeUtc).toLocaleString();
+      const sid = s.id ?? s.sessionId ?? s.Id;
+
+      return `
+        <div class="row">
+          <div class="rowLeft">
+            <span class="badge"></span>
+            <div style="min-width:0;">
+              <div class="rowTitle">${escapeHtml(s.projectTitle)}</div>
+              <div class="rowSub">${escapeHtml(endLocal)}</div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="rowRight">${secondsToHhMm(s.durationSeconds)}</div>
+
+            ${sid ? `
+              <button
+                type="button"
+                class="btnDelSession"
+                data-id="${escapeHtml(sid)}"
+                title="Excluir sessão"
+                aria-label="Excluir sessão"
+                style="
+                  border:none; background:transparent; cursor:pointer;
+                  color: rgba(244,114,128,.95); font-weight:650;
+                  padding:6px 8px; border-radius:10px;
+                "
+              >🗑️</button>
+            ` : ``}
+          </div>
+        </div>`;
+    }).join('');
   }
-
-  els.sessionList.innerHTML = list.map(s => {
-    const endLocal = new Date(s.endTimeUtc).toLocaleString();
-    const sid = s.id ?? s.sessionId ?? s.Id; // tolerante ao nome do campo
-
-    return `
-      <div class="row">
-        <div class="rowLeft">
-          <span class="badge"></span>
-          <div style="min-width:0;">
-            <div class="rowTitle">${escapeHtml(s.projectTitle)}</div>
-            <div class="rowSub">${escapeHtml(endLocal)}</div>
-          </div>
-        </div>
-
-        <div style="display:flex; align-items:center; gap:10px;">
-          <div class="rowRight">${secondsToHhMm(s.durationSeconds)}</div>
-
-          ${sid ? `
-            <button
-              type="button"
-              class="btnDelSession"
-              data-id="${escapeHtml(sid)}"
-              title="Excluir sessão"
-              aria-label="Excluir sessão"
-              style="
-                border:none; background:transparent; cursor:pointer;
-                color: rgba(244,114,128,.95); font-weight:650;
-                padding:6px 8px; border-radius:10px;
-              "
-            >🗑️</button>
-          ` : ``}
-        </div>
-      </div>`;
-  }).join('');
-}
 
   // ============================================================
   // Distribuição
@@ -853,10 +986,7 @@ function renderLastSessions(list){
       const share = sumSeconds > 0 ? (sec / sumSeconds) : 0;
 
       const { c1, c2 } = colorsForProject(x);
-      const medal =
-        idx === 0 ? "🏆" :
-        idx === 1 ? "🥈" :
-        idx === 2 ? "🥉" : "";
+      const medal = idx === 0 ? "🏆" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "";
 
       return `
         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
@@ -1039,7 +1169,6 @@ function renderLastSessions(list){
 
     try {
       setLoading(true);
-      console.log("DELETE sessionId =>", id);
       await apiPost('/sessions/delete', { sessionId: id });
       await reloadDashboardState();
       showToast('Sessão excluída.');
@@ -1133,6 +1262,19 @@ function renderLastSessions(list){
 
   // ===== Events =====
   els.projectSelect?.addEventListener('change', async () => {
+    const raw = els.projectSelect?.value;
+
+    // ✅ Novo: "Adicionar projeto…"
+    if (raw === '__add__') {
+      // volta para o último válido antes de abrir o modal
+      if (els.projectSelect) els.projectSelect.value = lastValidProjectId || 'null';
+      openProjectModal();
+      return;
+    }
+
+    // atualiza "último válido"
+    if (raw && raw !== 'null') lastValidProjectId = raw;
+
     try {
       setLoading(true);
 
@@ -1149,6 +1291,54 @@ function renderLastSessions(list){
     } finally {
       setLoading(false);
     }
+  });
+
+  // ===== Criar projeto (novo) =====
+  function showModalError(msg){
+    if (!modalEls.err) return;
+    modalEls.err.classList.remove('d-none');
+    modalEls.err.innerHTML = `<div class="alert">${escapeHtml(msg)}</div>`;
+  }
+
+  async function createProject(title){
+    // endpoint esperado
+    return apiPost('/projects/create', { title });
+  }
+
+  modalEls.btnSave?.addEventListener('click', async () => {
+    try {
+      setLoading(true);
+
+      const title = (modalEls.input?.value || '').trim();
+      if (!title) {
+        showModalError('Informe um nome para o projeto.');
+        return;
+      }
+
+      const created = await createProject(title);
+      const newId = created?.id || created?.projectId;
+
+      if (!newId) {
+        showModalError('Projeto criado, mas o backend não retornou o id.');
+        return;
+      }
+
+      // define como default (pra já aparecer como selecionado)
+      await apiPost('/projects/set-default', { projectId: newId });
+
+      closeProjectModal();
+      await reloadDashboardState();
+      showToast('Projeto criado.');
+    } catch (e) {
+      showModalError(e.message || 'Erro ao criar projeto.');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  // Enter salva
+  modalEls.input?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') modalEls.btnSave?.click();
   });
 
   els.btnStart?.addEventListener('click', async () => {
