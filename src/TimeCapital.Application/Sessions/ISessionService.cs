@@ -17,6 +17,7 @@ public interface ISessionService
         string userId,
         CancellationToken ct = default);
 
+Task DeleteSessionAsync(string userId, Guid sessionId, CancellationToken ct);
     // ATUALIZADO: aceita projectId opcional (modo B)
     Task<DashboardStateDto> GetDashboardStateAsync(
         string userId,

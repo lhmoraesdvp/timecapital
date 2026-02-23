@@ -70,12 +70,11 @@ public sealed class SessionService : ISessionService
         if (active == null)
             throw new InvalidOperationException("Nenhuma sessão ativa.");
 
-        active.EndTimeUtc = DateTimeOffset.UtcNow;
+         var endUtc = DateTimeOffset.UtcNow;
+         active.EndTimeUtc = endUtc;
         await _db.SaveChangesAsync(ct);
 
-        var durationSeconds = EF.Functions.DateDiffSecond(
-            active.StartTimeUtc,
-            active.EndTimeUtc!.Value);
+        var durationSeconds = (int)Math.Max(0, (endUtc - active.StartTimeUtc).TotalSeconds);
 
         return new StopSessionResponse(
             active.Id,
@@ -83,6 +82,30 @@ public sealed class SessionService : ISessionService
             active.EndTimeUtc!.Value,
             durationSeconds);
     }
+
+public async Task DeleteSessionAsync(string userId, Guid sessionId, CancellationToken ct)
+{
+    // carrega sessão + projeto (pra validar dono/usuário)
+    var session = await _db.Sessions
+        .Include(s => s.Project)
+        .FirstOrDefaultAsync(s => s.Id == sessionId, ct);
+
+    if (session is null)
+        throw new InvalidOperationException("Sessão não encontrada.");
+
+    // ✅ garante que a sessão é do usuário logado
+    if (session.UserId != userId)
+        throw new InvalidOperationException("Sessão inválida para este usuário.");
+
+    // ✅ não deixar deletar sessão ativa (pra não bagunçar o timer)
+    var isActive = session.EndTimeUtc == null && session.CanceledAtUtc == null;
+    if (isActive)
+        throw new InvalidOperationException("Não é possível excluir uma sessão ativa. Finalize ou cancele primeiro.");
+
+    _db.Sessions.Remove(session);
+    await _db.SaveChangesAsync(ct);
+}
+
 
     // =========================
     // CANCEL

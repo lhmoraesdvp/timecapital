@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TimeCapital.Application.Sessions;
 using TimeCapital.Web.Infrastructure;
@@ -5,6 +6,7 @@ using TimeCapital.Web.Infrastructure;
 namespace TimeCapital.Web.Controllers;
 
 [ApiController]
+[Authorize] // ✅ adiciona aqui
 [Route("")]
 public sealed class DashboardStateController : ControllerBase
 {
@@ -17,7 +19,6 @@ public sealed class DashboardStateController : ControllerBase
         _user = user;
     }
 
-    // GET /dashboard-state?projectId=<guid>
     [HttpGet("dashboard-state")]
     public async Task<ActionResult<DashboardStateDto>> Get(
         [FromQuery] Guid? projectId,
