@@ -1,5 +1,7 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Identity
+@{
   Layout = null;
+  const string AppVersion = "1.10";
 }
 
 <!doctype html>
@@ -11,6 +13,7 @@
 
   <style>
     :root{
+      /* ===== shell ===== */
       --bg: #fdfcf9;
       --card: #ffffff;
       --border: #eceae4;
@@ -19,6 +22,16 @@
       --text-strong: #0f172a;
       --muted: #94a3b8;
 
+      --shadow: 0 12px 40px rgba(2, 6, 23, .06);
+      --radius: 18px;
+
+      --brand: #34d399;
+      --brand-2: #60a5fa;
+      --danger: #ef4444;
+
+      --navw: 280px;
+
+      /* ===== dashboard (seu) ===== */
       --track: #eef2f7;
 
       --mango: #f47280;
@@ -33,14 +46,16 @@
 
       --reset-bg: rgba(148,163,184,0.14);
 
-      --shadow: 0 14px 38px rgba(15, 23, 42, 0.06);
-      --radius: 26px;
-      --radius-sm: 18px;
+      --shadow2: 0 14px 38px rgba(15, 23, 42, 0.06);
+      --radius2: 26px;
+      --radius-sm2: 18px;
 
       --overlay: rgba(15, 23, 42, 0.45);
     }
 
     *{ box-sizing:border-box; }
+    html, body{ height:100%; }
+
     body{
       margin:0;
       min-height:100vh;
@@ -52,10 +67,243 @@
       color: var(--text-strong);
     }
 
+    a{ color: inherit; text-decoration:none; }
+    button{ font: inherit; }
+
+    /* ======== APP SHELL ======== */
+    .app{
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: var(--navw) 1fr;
+    }
+
+    .sidebar{
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 18px;
+      border-right: 1px solid var(--border);
+      background: rgba(255,255,255,.55);
+      backdrop-filter: blur(10px);
+    }
+
+    .brandShell{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 10px 16px;
+      margin-bottom: 12px;
+    }
+    .brandBadge{
+      width: 36px; height: 36px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(52,211,153,1), rgba(96,165,250,1));
+      box-shadow: 0 10px 25px rgba(52,211,153,.20);
+    }
+    .brandShell h1{
+      margin:0;
+      font-size: 16px;
+      letter-spacing: .2px;
+      color: var(--text-strong);
+      line-height: 1.1;
+      font-weight: 800;
+    }
+    .brandShell small{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top: 10px;
+    }
+    .navSection{ margin-top: 14px; }
+    .navTitle{
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 10px 10px 6px;
+    }
+    .nav a{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      transition: 140ms ease;
+    }
+    .nav a:hover{
+      background: rgba(15,23,42,.04);
+      border-color: rgba(15,23,42,.06);
+    }
+    .nav a.active{
+      background: rgba(52,211,153,.10);
+      border-color: rgba(52,211,153,.25);
+      color: var(--text-strong);
+    }
+    .icon{
+      width: 18px; height: 18px;
+      display:inline-grid;
+      place-items:center;
+      border-radius: 8px;
+      background: rgba(148,163,184,.14);
+      color: var(--text-strong);
+      font-size: 12px;
+    }
+
+    .main{
+      padding: 18px 22px 26px; /* ✅ sem footer fixo, sem espaço extra embaixo */
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+      padding: 10px 10px 16px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .crumbs{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width: 0;
+    }
+    .crumbs .page{
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-strong);
+      letter-spacing: .2px;
+      margin:0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .crumbs .sub{
+      font-size: 13px;
+      color: var(--muted);
+      margin:0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-area{ display:flex; align-items:center; gap:10px; }
+
+    /* CHIP estilo */
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(6px);
+      color: var(--text);
+      font-size: 12px;
+      white-space:nowrap;
+    }
+    .chip .dot{
+      width:7px;height:7px;border-radius:50%;
+      background: linear-gradient(135deg, var(--mango), var(--plant));
+      box-shadow: 0 0 0 3px rgba(244,114,128,.10);
+    }
+    .chip strong{
+      font-weight: 750;
+      color: var(--text-strong);
+    }
+
+    .dropdown{ position:relative; }
+    .user-pill{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.75);
+      box-shadow: 0 10px 30px rgba(2,6,23,.05);
+      cursor:pointer;
+      user-select:none;
+    }
+    .avatar{
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: 1px solid rgba(15,23,42,.08);
+      background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.8), rgba(148,163,184,.25) 55%),
+                  linear-gradient(135deg, rgba(52,211,153,.7), rgba(96,165,250,.55));
+      display:grid;
+      place-items:center;
+      font-weight: 800;
+      color: rgba(15,23,42,.85);
+      overflow:hidden;
+    }
+    .avatar img{ width:100%; height:100%; object-fit:cover; display:none; }
+    .user-meta{ display:flex; flex-direction:column; gap:1px; line-height:1.1; }
+    .user-name{ font-size: 13px; font-weight: 700; color: var(--text-strong); }
+    .user-role{ font-size: 12px; color: var(--muted); }
+    .chev{ width:16px; color: var(--muted); margin-left: 4px; }
+
+    .menu{
+      position:absolute;
+      right:0;
+      top: calc(100% + 10px);
+      width: 240px;
+      padding: 8px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      display:none;
+      z-index: 9999;
+    }
+    .menu.open{ display:block; }
+    .menu a, .menu button{
+      width: 100%;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      cursor:pointer;
+      text-align:left;
+    }
+    .menu a:hover, .menu button:hover{
+      background: rgba(15,23,42,.04);
+      border-color: rgba(15,23,42,.06);
+    }
+    .menu hr{
+      border:0;
+      height:1px;
+      background: var(--border);
+      margin: 6px 4px;
+    }
+    .danger{ color: var(--danger); }
+
+    .content{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 10px;
+    }
+
+    /* ======== SEU DASHBOARD ======== */
     .wrap{
       max-width: 1180px;
       margin: 0 auto;
-      padding: 30px 18px 56px;
+      padding: 4px 0 0;
     }
 
     .top{
@@ -72,7 +320,7 @@
       color: var(--muted);
       margin-bottom: 8px;
     }
-    h1{
+    .wrap h1{
       margin:0;
       font-size: 28px;
       line-height:1.1;
@@ -94,24 +342,6 @@
       justify-content:flex-end;
       align-items:center;
     }
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 9px 12px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: rgba(255,255,255,.72);
-      backdrop-filter: blur(6px);
-      color: var(--text);
-      font-size: 12px;
-      white-space:nowrap;
-    }
-    .chip .dot{
-      width:7px;height:7px;border-radius:50%;
-      background: linear-gradient(135deg, var(--mango), var(--plant));
-      box-shadow: 0 0 0 3px rgba(244,114,128,.10);
-    }
 
     .grid{
       display:grid;
@@ -123,8 +353,8 @@
     .card{
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      border-radius: 26px;
+      box-shadow: var(--shadow2);
     }
 
     .hero{
@@ -186,7 +416,7 @@
     .widgetShell{
       margin: 0 14px 14px;
       border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
+      border-radius: 18px;
       background:
         radial-gradient(520px 260px at 20% 0%, rgba(244,114,128,.09), transparent 60%),
         radial-gradient(520px 260px at 90% 30%, rgba(52,211,153,.08), transparent 60%),
@@ -455,6 +685,13 @@
     .d-none{ display:none !important; }
 
     @@media (max-width: 980px){
+      .app{ grid-template-columns: 1fr; }
+      .sidebar{
+        height:auto;
+        position:relative;
+        border-right:none;
+        border-bottom: 1px solid var(--border);
+      }
       .grid{ grid-template-columns: 1fr; }
       .chips{ justify-content:flex-start; }
     }
@@ -468,7 +705,7 @@
       align-items: center;
       justify-content: center;
       padding: 18px;
-      z-index: 9999;
+      z-index: 99999;
     }
     .modalCard{
       width: min(520px, 100%);
@@ -513,139 +750,250 @@
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div class="brand">
-        <div class="kicker">TimeCapital • Dashboard (local dev)</div>
-        <h1>Consistência, sem ruído.</h1>
-        <p class="subtitle">Cronômetro persistente baseado no StartTimeUtc do backend. Refresh reconstrói sem depender de memória.</p>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brandShell">
+        <div class="brandBadge" aria-hidden="true"></div>
+        <div>
+          <h1>TimeCapital</h1>
+          <small>Consistência, sem ruído.</small>
+        </div>
       </div>
 
-      <div class="chips" aria-label="Resumo rápido">
-        <div class="chip"><span class="dot"></span>Projeto: <strong id="chipFocus">—</strong></div>
-        <div class="chip">Semana: <strong id="chipWeekTotal">—</strong></div>
-        <div class="chip">Atualizado: <strong id="chipUpdated">—</strong></div>
-      </div>
-    </div>
-
-    <div class="grid">
-      <!-- LEFT -->
-      <section class="card hero" aria-label="Sessão atual">
-        <div class="heroHeader">
-          <div>
-            <div class="heroTitle">Sessão (MVP)</div>
-            <div class="heroNote">Start/Stop/Cancel + cronômetro reconstituído pelo backend.</div>
-          </div>
-
-          <div class="heroStat" aria-label="Total semanal">
-            <div class="label">Semana</div>
-            <div class="value" id="weekTotal">—</div>
-            <div class="delta"><span class="miniDot"></span><span id="weekDelta">—</span></div>
-          </div>
+      <nav class="nav" aria-label="Navegação principal">
+        <div class="navSection">
+          <div class="navTitle">Principal</div>
+          <a class="active" href="/Dashboard"><span class="icon">⌂</span>Dashboard</a>
+          <a href="/Sessions"><span class="icon">⏱</span>Sessões</a>
+          <a href="/Projects"><span class="icon">▦</span>Projetos</a>
         </div>
 
-        <div class="widgetShell" role="group" aria-label="Timer">
-          <div class="wHeader">
-            <div class="area">
-              <div class="label" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <span>Projeto</span>
+        <div class="navSection">
+          <div class="navTitle">Relatórios</div>
+          <a href="/Reports/Week"><span class="icon">≋</span>Semana</a>
+          <a href="/Reports/Month"><span class="icon">▤</span>Mês</a>
+          <a href="/Reports/Export"><span class="icon">⇩</span>Exportar</a>
+        </div>
 
-                <button
-                  id="btnDeleteProject"
-                  type="button"
-                  title="Excluir projeto selecionado"
-                  aria-label="Excluir projeto selecionado"
-                  style="
-                    border:none; background:transparent; cursor:pointer;
-                    color: rgba(244,114,128,.95); font-weight:650;
-                    padding:6px 8px; border-radius:10px;
-                  "
-                >🗑️</button>
+        <div class="navSection">
+          <div class="navTitle">Configurações</div>
+          <a href="/Profile"><span class="icon">☺</span>Meu perfil</a>
+          <a href="/Settings"><span class="icon">⚙</span>Preferências</a>
+          <a href="/Admin"><span class="icon">🛡</span>Admin</a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="crumbs">
+          <h2 class="page" id="pageTitle">Dashboard</h2>
+          <p class="sub" id="pageSub">Visão geral do seu tempo e consistência.</p>
+        </div>
+
+        <div class="user-area">
+          <div class="dropdown" id="userDropdown">
+            <div class="user-pill" id="userPill" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false">
+              <div class="avatar" title="Foto do usuário">
+                <img id="avatarImg" alt="Foto do usuário" src="" />
+                <span id="avatarFallback">
+                  @{
+                    var nm = (User?.Identity?.IsAuthenticated ?? false)
+                      ? (User.Identity?.Name ?? "U")
+                      : "Visitante";
+                    var parts = nm.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    var initials =
+                      parts.Length >= 2 ? $"{parts[0][0]}{parts[^1][0]}" :
+                      parts.Length == 1 ? $"{parts[0][0]}" :
+                      "U";
+                  }
+                  @initials.ToUpperInvariant()
+                </span>
               </div>
 
-              <div class="selectV3c">
-                <select id="projectSelect" aria-label="Selecione o projeto">
-                  <option value="">Carregando...</option>
-                </select>
-                <div class="line"></div>
+              <div class="user-meta">
+                <div class="user-name" id="userName">
+                  @if (User?.Identity?.IsAuthenticated ?? false)
+                  {
+                    @User.Identity!.Name
+                  }
+                  else
+                  {
+                    @:Visitante
+                  }
+                </div>
+                <div class="user-role" id="userRole">Usuário</div>
               </div>
+
+              <span class="chev" aria-hidden="true">▾</span>
             </div>
 
-            <div class="today" aria-label="Hoje">
-              <div class="tlabel">Hoje</div>
-              <div class="tvalue" id="todayDone">—</div>
+            <div class="menu" id="userMenu" role="menu" aria-label="Menu do usuário">
+              <a role="menuitem" href="/Profile"><span class="icon">☺</span>Ver perfil</a>
+              <a role="menuitem" href="/Identity/Account/Manage"><span class="icon">👤</span>Conta & segurança</a>
+              <a role="menuitem" href="/Settings"><span class="icon">⚙</span>Preferências</a>
+
+              <hr />
+
+              <form method="post" action="/Identity/Account/Logout" style="margin:0;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="danger" role="menuitem">
+                  <span class="icon">⎋</span>
+                  Sair (Logoff)
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <section class="content">
+        <div class="wrap">
+          <div class="top">
+            <div class="brand">
+              <div class="kicker">TimeCapital • Dashboard (local dev)</div>
+              <h1>Consistência, sem ruído.</h1>
+              <p class="subtitle">Cronômetro persistente baseado no StartTimeUtc do backend. Refresh reconstrói sem depender de memória.</p>
+            </div>
+
+            <!-- ✅ Agora aqui fica perfeito e não corta nada -->
+            <div class="chips" aria-label="Resumo rápido">
+              <div class="chip" title="Total do dia somando todos os projetos">
+                <span class="dot"></span>
+                Foco hoje: <strong id="chipTodayAll">—</strong>
+              </div>
+              <div class="chip"><span class="dot"></span>Projeto: <strong id="chipFocus">—</strong></div>
+              <div class="chip">Semana: <strong id="chipWeekTotal">—</strong></div>
+              <div class="chip">Versão: <strong>v @AppVersion</strong></div>
+              <div class="chip">Atualizado: <strong id="chipUpdated">—</strong></div>
             </div>
           </div>
 
-          <div class="ringWrap" aria-label="Cronômetro">
-            <svg viewBox="0 0 300 300" aria-hidden="true">
-              <defs>
-                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#f47280"/>
-                  <stop offset="100%" stop-color="#34d399"/>
-                </linearGradient>
-              </defs>
+          <div class="grid">
+            <!-- LEFT -->
+            <section class="card hero" aria-label="Sessão atual">
+              <div class="heroHeader">
+                <div>
+                  <div class="heroTitle">Sessão (MVP)</div>
+                  <div class="heroNote">Start/Stop/Cancel + cronômetro reconstituído pelo backend.</div>
+                </div>
 
-              <circle class="track" cx="150" cy="150" r="120"></circle>
-              <circle class="progress"
-                      id="ringProgress"
-                      cx="150" cy="150" r="120"
-                      stroke-dasharray="754"
-                      stroke-dashoffset="754"></circle>
-            </svg>
+                <div class="heroStat" aria-label="Total semanal">
+                  <div class="label">Semana</div>
+                  <div class="value" id="weekTotal">—</div>
+                  <div class="delta"><span class="miniDot"></span><span id="weekDelta">—</span></div>
+                </div>
+              </div>
 
-            <div class="center">
-              <div class="time" id="timeText">00:00:00</div>
-              <div class="meta" id="sessionStatus">Carregando…</div>
-            </div>
+              <div class="widgetShell" role="group" aria-label="Timer">
+                <div class="wHeader">
+                  <div class="area">
+                    <div class="label" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                      <span>Projeto</span>
+
+                      <button
+                        id="btnDeleteProject"
+                        type="button"
+                        title="Excluir projeto selecionado"
+                        aria-label="Excluir projeto selecionado"
+                        style="
+                          border:none; background:transparent; cursor:pointer;
+                          color: rgba(244,114,128,.95); font-weight:650;
+                          padding:6px 8px; border-radius:10px;
+                        "
+                      >🗑️</button>
+                    </div>
+
+                    <div class="selectV3c">
+                      <select id="projectSelect" aria-label="Selecione o projeto">
+                        <option value="">Carregando...</option>
+                      </select>
+                      <div class="line"></div>
+                    </div>
+                  </div>
+
+                  <div class="today" aria-label="Hoje">
+                    <div class="tlabel">Hoje</div>
+                    <div class="tvalue" id="todayDone">—</div>
+                  </div>
+                </div>
+
+                <div class="ringWrap" aria-label="Cronômetro">
+                  <svg viewBox="0 0 300 300" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#f47280"/>
+                        <stop offset="100%" stop-color="#34d399"/>
+                      </linearGradient>
+                    </defs>
+
+                    <circle class="track" cx="150" cy="150" r="120"></circle>
+                    <circle class="progress"
+                            id="ringProgress"
+                            cx="150" cy="150" r="120"
+                            stroke-dasharray="754"
+                            stroke-dashoffset="754"></circle>
+                  </svg>
+
+                  <div class="center">
+                    <div class="time" id="timeText">00:00:00</div>
+                    <div class="meta" id="sessionStatus">Carregando…</div>
+                  </div>
+                </div>
+
+                <div class="controls" aria-label="Ações">
+                  <button class="btn btnStart" id="btnStart" type="button">Start</button>
+                  <button class="btn btnStop d-none" id="btnStop" type="button">Stop</button>
+                  <button class="btn btnCancel d-none" id="btnCancel" type="button">Cancel</button>
+                </div>
+
+                <div class="status stop" id="status">
+                  <div class="dot"></div>
+                  <span id="statusText">Carregando…</span>
+                </div>
+
+                <div id="toastArea"></div>
+              </div>
+            </section>
+
+            <!-- RIGHT -->
+            <aside class="side" aria-label="Painéis">
+              <section class="card" aria-label="Distribuição">
+                <div class="cardHead">
+                  <h3>Distribuição</h3>
+                  <div class="hint">Esta semana</div>
+                </div>
+                <div class="chartPad">
+                  <div id="distWeek"></div>
+                </div>
+              </section>
+
+              <section class="card" aria-label="Horas por dia">
+                <div class="cardHead">
+                  <h3>Horas por dia</h3>
+                  <div class="hint">Últimos 7 dias</div>
+                </div>
+                <div class="chartPad">
+                  <div id="hours7"></div>
+                </div>
+              </section>
+
+              <section class="card" aria-label="Últimas sessões">
+                <div class="cardHead">
+                  <h3>Últimas sessões</h3>
+                  <div class="hint">Projeto padrão</div>
+                </div>
+                <div class="list" id="sessionList"></div>
+              </section>
+            </aside>
           </div>
-
-          <div class="controls" aria-label="Ações">
-            <button class="btn btnStart" id="btnStart" type="button">Start</button>
-            <button class="btn btnStop d-none" id="btnStop" type="button">Stop</button>
-            <button class="btn btnCancel d-none" id="btnCancel" type="button">Cancel</button>
-          </div>
-
-          <div class="status stop" id="status">
-            <div class="dot"></div>
-            <span id="statusText">Carregando…</span>
-          </div>
-
-          <div id="toastArea"></div>
         </div>
       </section>
-
-      <!-- RIGHT -->
-      <aside class="side" aria-label="Painéis">
-        <section class="card" aria-label="Distribuição">
-          <div class="cardHead">
-            <h3>Distribuição</h3>
-            <div class="hint">Esta semana</div>
-          </div>
-          <div class="chartPad">
-            <div id="distWeek"></div>
-          </div>
-        </section>
-
-        <section class="card" aria-label="Horas por dia">
-          <div class="cardHead">
-            <h3>Horas por dia</h3>
-            <div class="hint">Últimos 7 dias</div>
-          </div>
-          <div class="chartPad">
-            <div id="hours7"></div>
-          </div>
-        </section>
-
-        <section class="card" aria-label="Últimas sessões">
-          <div class="cardHead">
-            <h3>Últimas sessões</h3>
-            <div class="hint">Projeto padrão</div>
-          </div>
-          <div class="list" id="sessionList"></div>
-        </section>
-      </aside>
-    </div>
+    </main>
   </div>
 
   <!-- Modal Novo Projeto -->
@@ -671,822 +1019,864 @@
     </div>
   </div>
 
-<script>
-(() => {
-  // ✅ ajuste aqui se seus endpoints mudarem
-  const endpoints = {
-    dashboardState: '/dashboard-state',
-    setDefaultProject: '/projects/set-default',
-    createProject: '/projects/create',
-    deleteProject: '/Projects/delete',
-    startSession: '/sessions/start',
-    stopSession: '/sessions/stop',
-    cancelSession: '/sessions/cancel',
-    deleteSession: '/Sessions/delete',
-  };
+  <script>
+    // ======= dropdown do usuário (shell) =======
+    (function(){
+      const pill = document.getElementById('userPill');
+      const menu = document.getElementById('userMenu');
 
-  const els = {
-    projectSelect: document.getElementById('projectSelect'),
-    btnDeleteProject: document.getElementById('btnDeleteProject'),
-    btnStart: document.getElementById('btnStart'),
-    btnStop: document.getElementById('btnStop'),
-    btnCancel: document.getElementById('btnCancel'),
+      if (!pill || !menu) return;
 
-    timeText: document.getElementById('timeText'),
-    sessionStatus: document.getElementById('sessionStatus'),
-    statusText: document.getElementById('statusText'),
-    status: document.getElementById('status'),
+      function setOpen(isOpen){
+        menu.classList.toggle('open', isOpen);
+        pill.setAttribute('aria-expanded', String(isOpen));
+      }
+      function toggle(){
+        setOpen(!menu.classList.contains('open'));
+      }
 
-    chipFocus: document.getElementById('chipFocus'),
-    chipWeekTotal: document.getElementById('chipWeekTotal'),
-    chipUpdated: document.getElementById('chipUpdated'),
+      pill.addEventListener('click', (e) => { e.stopPropagation(); toggle(); });
+      pill.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+        if (e.key === 'Escape') setOpen(false);
+      });
+      document.addEventListener('click', () => setOpen(false));
+    })();
+  </script>
 
-    weekTotal: document.getElementById('weekTotal'),
-    weekDelta: document.getElementById('weekDelta'),
-    todayDone: document.getElementById('todayDone'),
+  <script>
+  (() => {
+    // ✅ ajuste aqui se seus endpoints mudarem
+    const endpoints = {
+      dashboardState: '/dashboard-state',
+      setDefaultProject: '/projects/set-default',
+      createProject: '/projects/create',
+      deleteProject: '/Projects/delete',
+      startSession: '/sessions/start',
+      stopSession: '/sessions/stop',
+      cancelSession: '/sessions/cancel',
+      deleteSession: '/Sessions/delete',
+    };
 
-    sessionList: document.getElementById('sessionList'),
-    toastArea: document.getElementById('toastArea'),
+    const els = {
+      projectSelect: document.getElementById('projectSelect'),
+      btnDeleteProject: document.getElementById('btnDeleteProject'),
+      btnStart: document.getElementById('btnStart'),
+      btnStop: document.getElementById('btnStop'),
+      btnCancel: document.getElementById('btnCancel'),
 
-    ring: document.getElementById('ringProgress'),
+      timeText: document.getElementById('timeText'),
+      sessionStatus: document.getElementById('sessionStatus'),
+      statusText: document.getElementById('statusText'),
+      status: document.getElementById('status'),
 
-    distWeek: document.getElementById('distWeek'),
-    hours7: document.getElementById('hours7'),
-  };
+      chipFocus: document.getElementById('chipFocus'),
+      chipWeekTotal: document.getElementById('chipWeekTotal'),
+      chipUpdated: document.getElementById('chipUpdated'),
 
-  // ===== Modal =====
-  const modalEls = {
-    modal: document.getElementById('projectModal'),
-    btnClose: document.getElementById('btnCloseProjectModal'),
-    btnCancel: document.getElementById('btnCancelProjectModal'),
-    btnSave: document.getElementById('btnSaveProjectModal'),
-    input: document.getElementById('projectTitleInput'),
-    err: document.getElementById('projectModalError'),
-  };
+      // ✅ total do dia (todos projetos)
+      chipTodayAll: document.getElementById('chipTodayAll'),
 
-  function openProjectModal(){
-    if (!modalEls.modal) return;
-    modalEls.err?.classList.add('d-none');
-    if (modalEls.err) modalEls.err.innerHTML = '';
-    if (modalEls.input) modalEls.input.value = '';
-    modalEls.modal.classList.remove('d-none');
-    setTimeout(() => modalEls.input?.focus(), 0);
-  }
+      weekTotal: document.getElementById('weekTotal'),
+      weekDelta: document.getElementById('weekDelta'),
+      todayDone: document.getElementById('todayDone'),
 
-  function closeProjectModal(){
-    modalEls.modal?.classList.add('d-none');
-  }
+      sessionList: document.getElementById('sessionList'),
+      toastArea: document.getElementById('toastArea'),
 
-  modalEls.btnClose?.addEventListener('click', closeProjectModal);
-  modalEls.btnCancel?.addEventListener('click', closeProjectModal);
-  modalEls.modal?.addEventListener('click', (e) => {
-    if (e.target === modalEls.modal) closeProjectModal();
-  });
+      ring: document.getElementById('ringProgress'),
 
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modalEls.modal && !modalEls.modal.classList.contains('d-none')) {
-      closeProjectModal();
+      distWeek: document.getElementById('distWeek'),
+      hours7: document.getElementById('hours7'),
+    };
+
+    // ===== Modal =====
+    const modalEls = {
+      modal: document.getElementById('projectModal'),
+      btnClose: document.getElementById('btnCloseProjectModal'),
+      btnCancel: document.getElementById('btnCancelProjectModal'),
+      btnSave: document.getElementById('btnSaveProjectModal'),
+      input: document.getElementById('projectTitleInput'),
+      err: document.getElementById('projectModalError'),
+    };
+
+    function openProjectModal(){
+      if (!modalEls.modal) return;
+      modalEls.err?.classList.add('d-none');
+      if (modalEls.err) modalEls.err.innerHTML = '';
+      if (modalEls.input) modalEls.input.value = '';
+      modalEls.modal.classList.remove('d-none');
+      setTimeout(() => modalEls.input?.focus(), 0);
     }
-  });
 
-  const CIRC = 754;
-
-  // ===== Timer persistente =====
-  let timer = { intervalId: null, startUtcMs: null };
-
-  const pad2 = (n) => String(n).padStart(2, '0');
-
-  function formatHMS(totalSeconds) {
-    const s = Math.max(0, Math.floor(totalSeconds));
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-    return `${pad2(h)}:${pad2(m)}:${pad2(sec)}`;
-  }
-
-  function secondsToHhMm(totalSeconds){
-    const s = Math.max(0, Math.floor(totalSeconds));
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    return `${h}h ${pad2(m)}m`;
-  }
-
-  function tick() {
-    if (timer.startUtcMs == null) return;
-    const elapsedSec = (Date.now() - timer.startUtcMs) / 1000;
-    if (els.timeText) els.timeText.textContent = formatHMS(elapsedSec);
-  }
-
-  function startTimerFromUtc(startTimeUtc) {
-    stopTimerAndReset(false);
-    timer.startUtcMs = Date.parse(startTimeUtc);
-    tick();
-    timer.intervalId = setInterval(tick, 1000);
-  }
-
-  function stopTimerAndReset(resetText = true) {
-    if (timer.intervalId) clearInterval(timer.intervalId);
-    timer.intervalId = null;
-    timer.startUtcMs = null;
-    if (resetText && els.timeText) els.timeText.textContent = '00:00:00';
-  }
-
-  // ===== UI helpers =====
-  function escapeHtml(str) {
-    return String(str)
-      .replaceAll('&','&amp;')
-      .replaceAll('<','&lt;')
-      .replaceAll('>','&gt;')
-      .replaceAll('"','&quot;')
-      .replaceAll("'","&#039;");
-  }
-
-  function showToast(msg) {
-    if (!els.toastArea) return;
-    els.toastArea.innerHTML = `<div class="alert">${escapeHtml(msg)}</div>`;
-    setTimeout(() => { els.toastArea.innerHTML = ''; }, 2400);
-  }
-
-  function setStatus(mode){
-    if (!els.status || !els.statusText) return;
-    els.status.classList.remove('on','stop');
-    if (mode === 'on') {
-      els.status.classList.add('on');
-      els.statusText.textContent = 'Ativo';
-      if (els.sessionStatus) els.sessionStatus.textContent = 'Sessão ativa';
-    } else {
-      els.status.classList.add('stop');
-      els.statusText.textContent = 'Parado';
-      if (els.sessionStatus) els.sessionStatus.textContent = 'Parado';
+    function closeProjectModal(){
+      modalEls.modal?.classList.add('d-none');
     }
-  }
 
-  function setRingProgress(p01){
-    if (!els.ring) return;
-    const p = Math.max(0, Math.min(1, p01));
-    els.ring.setAttribute('stroke-dashoffset', String(CIRC * (1 - p)));
-  }
-
-  // ===== API =====
-  async function handleResponse(res) {
-    const text = await res.text();
-    let data = null;
-    try { data = text ? JSON.parse(text) : null; } catch {}
-
-    if (!res.ok) {
-      // se deu 401/403, normalmente Identity redireciona para html; aqui vira texto
-      const msg = data?.message || text || `Erro HTTP ${res.status}`;
-      throw new Error(msg);
-    }
-    return data;
-  }
-
-  async function apiGet(url) {
-    const res = await fetch(url, { method:'GET', headers:{'Accept':'application/json'} });
-    return handleResponse(res);
-  }
-
-  async function apiPost(url, bodyObj) {
-    const res = await fetch(url, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body: bodyObj ? JSON.stringify(bodyObj) : '{}'
+    modalEls.btnClose?.addEventListener('click', closeProjectModal);
+    modalEls.btnCancel?.addEventListener('click', closeProjectModal);
+    modalEls.modal?.addEventListener('click', (e) => {
+      if (e.target === modalEls.modal) closeProjectModal();
     });
-    return handleResponse(res);
-  }
 
-  // ===== Render =====
-  function getSelectedProjectId() {
-    const v = els.projectSelect?.value;
-    return v && v !== 'null' && v !== '__add__' ? v : null;
-  }
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modalEls.modal && !modalEls.modal.classList.contains('d-none')) {
+        closeProjectModal();
+      }
+    });
 
-  let lastValidProjectId = null;
+    const CIRC = 754;
 
-  function canDeleteSelectedProject() {
-    const v = els.projectSelect?.value;
-    return v && v !== 'null' && v !== '__add__';
-  }
+    // ===== Timer persistente =====
+    let timer = { intervalId: null, startUtcMs: null };
 
-  function setDeleteButtonState(isLoading = false) {
-    if (!els.btnDeleteProject) return;
-    const disabled = isLoading || !canDeleteSelectedProject();
-    els.btnDeleteProject.disabled = disabled;
-    els.btnDeleteProject.style.opacity = disabled ? '0.35' : '1';
-    els.btnDeleteProject.style.cursor = disabled ? 'not-allowed' : 'pointer';
-  }
+    const pad2 = (n) => String(n).padStart(2, '0');
 
-  function setLoading(isLoading){
-    if (els.projectSelect) els.projectSelect.disabled = isLoading;
-    if (els.btnStart) els.btnStart.disabled = isLoading;
-    if (els.btnStop) els.btnStop.disabled = isLoading;
-    if (els.btnCancel) els.btnCancel.disabled = isLoading;
-    if (modalEls.btnSave) modalEls.btnSave.disabled = isLoading;
-    setDeleteButtonState(isLoading);
-  }
+    function formatHMS(totalSeconds) {
+      const s = Math.max(0, Math.floor(totalSeconds));
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      return `${pad2(h)}:${pad2(m)}:${pad2(sec)}`;
+    }
 
-  function renderProjects(projects, defaultProjectId){
-    if (!els.projectSelect) return;
+    function secondsToHhMm(totalSeconds){
+      const s = Math.max(0, Math.floor(totalSeconds));
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      return `${h}h ${pad2(m)}m`;
+    }
 
-    const keepCurrent = getSelectedProjectId();
-    els.projectSelect.innerHTML = '';
+    function tick() {
+      if (timer.startUtcMs == null) return;
+      const elapsedSec = (Date.now() - timer.startUtcMs) / 1000;
+      if (els.timeText) els.timeText.textContent = formatHMS(elapsedSec);
+    }
 
-    if (!projects || projects.length === 0) {
-      const opt = document.createElement('option');
-      opt.value = 'null';
-      opt.textContent = 'Nenhum projeto';
-      els.projectSelect.appendChild(opt);
+    function startTimerFromUtc(startTimeUtc) {
+      stopTimerAndReset(false);
+      timer.startUtcMs = Date.parse(startTimeUtc);
+      tick();
+      timer.intervalId = setInterval(tick, 1000);
+    }
+
+    function stopTimerAndReset(resetText = true) {
+      if (timer.intervalId) clearInterval(timer.intervalId);
+      timer.intervalId = null;
+      timer.startUtcMs = null;
+      if (resetText && els.timeText) els.timeText.textContent = '00:00:00';
+    }
+
+    // ===== UI helpers =====
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
+    }
+
+    function showToast(msg) {
+      if (!els.toastArea) return;
+      els.toastArea.innerHTML = `<div class="alert">${escapeHtml(msg)}</div>`;
+      setTimeout(() => { els.toastArea.innerHTML = ''; }, 2400);
+    }
+
+    function setStatus(mode){
+      if (!els.status || !els.statusText) return;
+      els.status.classList.remove('on','stop');
+      if (mode === 'on') {
+        els.status.classList.add('on');
+        els.statusText.textContent = 'Ativo';
+        if (els.sessionStatus) els.sessionStatus.textContent = 'Sessão ativa';
+      } else {
+        els.status.classList.add('stop');
+        els.statusText.textContent = 'Parado';
+        if (els.sessionStatus) els.sessionStatus.textContent = 'Parado';
+      }
+    }
+
+    function setRingProgress(p01){
+      if (!els.ring) return;
+      const p = Math.max(0, Math.min(1, p01));
+      els.ring.setAttribute('stroke-dashoffset', String(CIRC * (1 - p)));
+    }
+
+    // ===== API =====
+    async function handleResponse(res) {
+      const text = await res.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch {}
+
+      if (!res.ok) {
+        const msg = data?.message || text || `Erro HTTP ${res.status}`;
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    async function apiGet(url) {
+      const res = await fetch(url, { method:'GET', headers:{'Accept':'application/json'} });
+      return handleResponse(res);
+    }
+
+    async function apiPost(url, bodyObj) {
+      const res = await fetch(url, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body: bodyObj ? JSON.stringify(bodyObj) : '{}'
+      });
+      return handleResponse(res);
+    }
+
+    // ===== Render =====
+    function getSelectedProjectId() {
+      const v = els.projectSelect?.value;
+      return v && v !== 'null' && v !== '__add__' ? v : null;
+    }
+
+    let lastValidProjectId = null;
+
+    function canDeleteSelectedProject() {
+      const v = els.projectSelect?.value;
+      return v && v !== 'null' && v !== '__add__';
+    }
+
+    function setDeleteButtonState(isLoading = false) {
+      if (!els.btnDeleteProject) return;
+      const disabled = isLoading || !canDeleteSelectedProject();
+      els.btnDeleteProject.disabled = disabled;
+      els.btnDeleteProject.style.opacity = disabled ? '0.35' : '1';
+      els.btnDeleteProject.style.cursor = disabled ? 'not-allowed' : 'pointer';
+    }
+
+    function setLoading(isLoading){
+      if (els.projectSelect) els.projectSelect.disabled = isLoading;
+      if (els.btnStart) els.btnStart.disabled = isLoading;
+      if (els.btnStop) els.btnStop.disabled = isLoading;
+      if (els.btnCancel) els.btnCancel.disabled = isLoading;
+      if (modalEls.btnSave) modalEls.btnSave.disabled = isLoading;
+      setDeleteButtonState(isLoading);
+    }
+
+    function renderProjects(projects, defaultProjectId){
+      if (!els.projectSelect) return;
+
+      const keepCurrent = getSelectedProjectId();
+      els.projectSelect.innerHTML = '';
+
+      if (!projects || projects.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = 'null';
+        opt.textContent = 'Nenhum projeto';
+        els.projectSelect.appendChild(opt);
+
+        const addOpt = document.createElement('option');
+        addOpt.value = '__add__';
+        addOpt.textContent = '+ Adicionar projeto…';
+        els.projectSelect.appendChild(addOpt);
+
+        if (els.chipFocus) els.chipFocus.textContent = '—';
+        setDeleteButtonState(false);
+        return;
+      }
+
+      for (const p of projects) {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.title;
+        els.projectSelect.appendChild(opt);
+      }
 
       const addOpt = document.createElement('option');
       addOpt.value = '__add__';
       addOpt.textContent = '+ Adicionar projeto…';
       els.projectSelect.appendChild(addOpt);
 
-      if (els.chipFocus) els.chipFocus.textContent = '—';
+      let desired = keepCurrent || defaultProjectId || projects[0].id;
+
+      if (!projects.some(p => String(p.id) === String(desired))) {
+        desired =
+          (defaultProjectId && projects.some(p => String(p.id) === String(defaultProjectId)))
+            ? defaultProjectId
+            : projects[0].id;
+      }
+
+      els.projectSelect.value = desired;
+      if (!els.projectSelect.value) {
+        els.projectSelect.value = projects[0].id;
+        desired = els.projectSelect.value;
+      }
+
+      lastValidProjectId = desired;
+
+      if (els.chipFocus) {
+        const title = projects.find(x => String(x.id) === String(desired))?.title ?? '—';
+        els.chipFocus.textContent = title;
+      }
+
       setDeleteButtonState(false);
-      return;
     }
 
-    for (const p of projects) {
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = p.title;
-      els.projectSelect.appendChild(opt);
-    }
+    function renderLastSessions(list){
+      if (!els.sessionList) return;
 
-    const addOpt = document.createElement('option');
-    addOpt.value = '__add__';
-    addOpt.textContent = '+ Adicionar projeto…';
-    els.projectSelect.appendChild(addOpt);
-
-    let desired = keepCurrent || defaultProjectId || projects[0].id;
-
-    if (!projects.some(p => String(p.id) === String(desired))) {
-      desired =
-        (defaultProjectId && projects.some(p => String(p.id) === String(defaultProjectId)))
-          ? defaultProjectId
-          : projects[0].id;
-    }
-
-    els.projectSelect.value = desired;
-    if (!els.projectSelect.value) {
-      els.projectSelect.value = projects[0].id;
-      desired = els.projectSelect.value;
-    }
-
-    lastValidProjectId = desired;
-
-    if (els.chipFocus) {
-      const title = projects.find(x => String(x.id) === String(desired))?.title ?? '—';
-      els.chipFocus.textContent = title;
-    }
-
-    setDeleteButtonState(false);
-  }
-
-  function renderLastSessions(list){
-    if (!els.sessionList) return;
-
-    if (!list || list.length === 0) {
-      els.sessionList.innerHTML = `
-        <div class="row">
-          <div class="rowLeft">
-            <span class="badge" style="background:rgba(148,163,184,.14); border-color:rgba(148,163,184,.20);"></span>
-            <div style="min-width:0;">
-              <div class="rowTitle">Nenhuma sessão ainda</div>
-              <div class="rowSub">Comece com Start 🙂</div>
-            </div>
-          </div>
-          <div class="rowRight">—</div>
-        </div>`;
-      return;
-    }
-
-    els.sessionList.innerHTML = list.map(s => {
-      const endLocal = new Date(s.endTimeUtc).toLocaleString();
-      const sid = s.id ?? s.sessionId ?? s.Id;
-
-      return `
-        <div class="row">
-          <div class="rowLeft">
-            <span class="badge"></span>
-            <div style="min-width:0;">
-              <div class="rowTitle">${escapeHtml(s.projectTitle)}</div>
-              <div class="rowSub">${escapeHtml(endLocal)}</div>
-            </div>
-          </div>
-
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div class="rowRight">${secondsToHhMm(s.durationSeconds)}</div>
-
-            ${sid ? `
-              <button
-                type="button"
-                class="btnDelSession"
-                data-id="${escapeHtml(sid)}"
-                title="Excluir sessão"
-                aria-label="Excluir sessão"
-                style="
-                  border:none; background:transparent; cursor:pointer;
-                  color: rgba(244,114,128,.95); font-weight:650;
-                  padding:6px 8px; border-radius:10px;
-                "
-              >🗑️</button>
-            ` : ``}
-          </div>
-        </div>`;
-    }).join('');
-  }
-
-  // Distribuição
-  function hashHue(str) {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
-    return h % 360;
-  }
-
-  function colorsForProject(p) {
-    const key = String(p?.projectId || p?.projectTitle || 'x');
-    const hue = hashHue(key);
-    const c1 = `hsla(${hue}, 82%, 70%, .95)`;
-    const c2 = `hsla(${(hue + 34) % 360}, 78%, 62%, .95)`;
-    return { c1, c2 };
-  }
-
-  function fmtPct01(p01){
-    const pct = Math.round(Math.max(0, Math.min(1, p01)) * 100);
-    return `${pct}%`;
-  }
-
-  function renderDistributionWeek(totalsByProject) {
-    if (!els.distWeek) return;
-
-    if (!totalsByProject || totalsByProject.length === 0) {
-      els.distWeek.innerHTML = `<div class="alert">Sem dados esta semana.</div>`;
-      return;
-    }
-
-    const top = totalsByProject.slice(0, 6);
-    const maxSeconds = Math.max(...top.map(x => Number(x.totalSeconds ?? 0)), 0);
-    const sumSeconds = top.reduce((acc, x) => acc + Number(x.totalSeconds ?? 0), 0);
-
-    els.distWeek.innerHTML = top.map((x, idx) => {
-      const sec = Number(x.totalSeconds ?? 0);
-      const pctBar = maxSeconds > 0 ? Math.max(2, Math.round((sec / maxSeconds) * 100)) : 0;
-      const share = sumSeconds > 0 ? (sec / sumSeconds) : 0;
-
-      const { c1, c2 } = colorsForProject(x);
-      const medal = idx === 0 ? "🏆" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "";
-
-      return `
-        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-            <div style="display:flex; align-items:center; gap:10px; min-width:0;">
-              <span title="${escapeHtml(x.projectTitle ?? '')}"
-                style="
-                  width:10px; height:10px; border-radius:999px; flex:0 0 auto;
-                  background: linear-gradient(135deg, ${c1}, ${c2});
-                  box-shadow: 0 0 0 3px rgba(148,163,184,0.12);
-                "></span>
-
+      if (!list || list.length === 0) {
+        els.sessionList.innerHTML = `
+          <div class="row">
+            <div class="rowLeft">
+              <span class="badge" style="background:rgba(148,163,184,.14); border-color:rgba(148,163,184,.20);"></span>
               <div style="min-width:0;">
-                <div style="
-                  font-size:12px; color: var(--text-strong); font-weight:650;
-                  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-                ">
-                  ${medal ? `<span style="margin-right:6px;">${medal}</span>` : ""}
-                  ${escapeHtml(x.projectTitle ?? 'Sem título')}
+                <div class="rowTitle">Nenhuma sessão ainda</div>
+                <div class="rowSub">Comece com Start 🙂</div>
+              </div>
+            </div>
+            <div class="rowRight">—</div>
+          </div>`;
+        return;
+      }
+
+      els.sessionList.innerHTML = list.map(s => {
+        const endLocal = new Date(s.endTimeUtc).toLocaleString();
+        const sid = s.id ?? s.sessionId ?? s.Id;
+
+        return `
+          <div class="row">
+            <div class="rowLeft">
+              <span class="badge"></span>
+              <div style="min-width:0;">
+                <div class="rowTitle">${escapeHtml(s.projectTitle)}</div>
+                <div class="rowSub">${escapeHtml(endLocal)}</div>
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="rowRight">${secondsToHhMm(s.durationSeconds)}</div>
+
+              ${sid ? `
+                <button
+                  type="button"
+                  class="btnDelSession"
+                  data-id="${escapeHtml(sid)}"
+                  title="Excluir sessão"
+                  aria-label="Excluir sessão"
+                  style="
+                    border:none; background:transparent; cursor:pointer;
+                    color: rgba(244,114,128,.95); font-weight:650;
+                    padding:6px 8px; border-radius:10px;
+                  "
+                >🗑️</button>
+              ` : ``}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // Distribuição
+    function hashHue(str) {
+      let h = 0;
+      for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+      return h % 360;
+    }
+
+    function colorsForProject(p) {
+      const key = String(p?.projectId || p?.projectTitle || 'x');
+      const hue = hashHue(key);
+      const c1 = `hsla(${hue}, 82%, 70%, .95)`;
+      const c2 = `hsla(${(hue + 34) % 360}, 78%, 62%, .95)`;
+      return { c1, c2 };
+    }
+
+    function fmtPct01(p01){
+      const pct = Math.round(Math.max(0, Math.min(1, p01)) * 100);
+      return `${pct}%`;
+    }
+
+    function renderDistributionWeek(totalsByProject) {
+      if (!els.distWeek) return;
+
+      if (!totalsByProject || totalsByProject.length === 0) {
+        els.distWeek.innerHTML = `<div class="alert">Sem dados esta semana.</div>`;
+        return;
+      }
+
+      const top = totalsByProject.slice(0, 6);
+      const maxSeconds = Math.max(...top.map(x => Number(x.totalSeconds ?? 0)), 0);
+      const sumSeconds = top.reduce((acc, x) => acc + Number(x.totalSeconds ?? 0), 0);
+
+      els.distWeek.innerHTML = top.map((x, idx) => {
+        const sec = Number(x.totalSeconds ?? 0);
+        const pctBar = maxSeconds > 0 ? Math.max(2, Math.round((sec / maxSeconds) * 100)) : 0;
+        const share = sumSeconds > 0 ? (sec / sumSeconds) : 0;
+
+        const { c1, c2 } = colorsForProject(x);
+        const medal = idx === 0 ? "🏆" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "";
+
+        return `
+          <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                <span title="${escapeHtml(x.projectTitle ?? '')}"
+                  style="
+                    width:10px; height:10px; border-radius:999px; flex:0 0 auto;
+                    background: linear-gradient(135deg, ${c1}, ${c2});
+                    box-shadow: 0 0 0 3px rgba(148,163,184,0.12);
+                  "></span>
+
+                <div style="min-width:0;">
+                  <div style="
+                    font-size:12px; color: var(--text-strong); font-weight:650;
+                    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+                  ">
+                    ${medal ? `<span style="margin-right:6px;">${medal}</span>` : ""}
+                    ${escapeHtml(x.projectTitle ?? 'Sem título')}
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex; align-items:baseline; gap:10px; flex:0 0 auto;">
+                <div style="font-size:12px; color: var(--text-strong); font-weight:650; white-space:nowrap;">
+                  ${secondsToHhMm(sec)}
+                </div>
+                <div style="font-size:11px; color: var(--muted); font-weight:650; white-space:nowrap;">
+                  ${fmtPct01(share)}
                 </div>
               </div>
             </div>
 
-            <div style="display:flex; align-items:baseline; gap:10px; flex:0 0 auto;">
-              <div style="font-size:12px; color: var(--text-strong); font-weight:650; white-space:nowrap;">
-                ${secondsToHhMm(sec)}
-              </div>
-              <div style="font-size:11px; color: var(--muted); font-weight:650; white-space:nowrap;">
-                ${fmtPct01(share)}
-              </div>
+            <div style="
+              height:10px; border-radius:999px; background: var(--track);
+              overflow:hidden; border:1px solid var(--border);
+            ">
+              <div style="
+                height:100%; width:${pctBar}%;
+                border-radius:999px;
+                background: linear-gradient(90deg, ${c1}, ${c2});
+                box-shadow: 0 10px 18px rgba(15,23,42,.06);
+              "></div>
             </div>
           </div>
+        `;
+      }).join('');
+    }
 
-          <div style="
-            height:10px; border-radius:999px; background: var(--track);
-            overflow:hidden; border:1px solid var(--border);
-          ">
-            <div style="
-              height:100%; width:${pctBar}%;
-              border-radius:999px;
-              background: linear-gradient(90deg, ${c1}, ${c2});
-              box-shadow: 0 10px 18px rgba(15,23,42,.06);
-            "></div>
-          </div>
+    // Horas por dia
+    function renderHoursLast7Days(last7Days) {
+      if (!els.hours7) return;
+
+      if (!last7Days || last7Days.length === 0) {
+        els.hours7.innerHTML = `<div class="alert">Sem dados nos últimos 7 dias.</div>`;
+        return;
+      }
+
+      const normalized = last7Days.map(x => {
+        const d = new Date(x.day + "T00:00:00");
+        const label = isNaN(d.getTime())
+          ? String(x.day)
+          : `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+        return { label, seconds: Number(x.totalSeconds ?? 0) };
+      });
+
+      const maxSeconds = Math.max(...normalized.map(x => x.seconds), 0);
+
+      const W = 560;
+      const H = 190;
+      const padL = 18;
+      const padR = 18;
+      const padT = 14;
+      const padB = 34;
+
+      const chartW = W - padL - padR;
+      const chartH = H - padT - padB;
+
+      const n = normalized.length;
+      const gap = 10;
+      const barW = Math.floor((chartW - gap * (n - 1)) / n);
+      const baseY = padT + chartH;
+
+      function barHeight(seconds) {
+        if (maxSeconds <= 0) return 2;
+        const h = Math.round((seconds / maxSeconds) * (chartH - 10));
+        return Math.max(2, h);
+      }
+
+      const gridLines = [0.25, 0.5, 0.75].map(p => {
+        const y = padT + chartH - Math.round(p * (chartH - 10));
+        return `<line x1="${padL}" x2="${W - padR}" y1="${y}" y2="${y}"
+                     stroke="rgba(236,234,228,.75)" stroke-dasharray="4 6" />`;
+      }).join('');
+
+      const bars = normalized.map((x, i) => {
+        const xPos = padL + i * (barW + gap);
+        const h = barHeight(x.seconds);
+        const yPos = baseY - h;
+
+        return `
+          <g class="b" data-label="${escapeHtml(x.label)}" data-seconds="${x.seconds}">
+            <rect x="${xPos}" y="${yPos}" width="${barW}" height="${h}" rx="10" fill="url(#barsGrad)"></rect>
+            <rect x="${xPos}" y="${baseY}" width="${barW}" height="1" rx="1" fill="rgba(236,234,228,.9)"></rect>
+
+            <text x="${xPos + barW/2}" y="${H - 12}" text-anchor="middle"
+                  font-size="11" fill="rgba(148,163,184,.95)" font-weight="520">
+              ${escapeHtml(x.label)}
+            </text>
+          </g>
+        `;
+      }).join('');
+
+      const tooltipStyle = `
+        position:absolute; left:0; top:0; transform:translate(-9999px,-9999px);
+        padding:8px 10px; border-radius:12px;
+        background: rgba(255,255,255,.92);
+        border: 1px solid var(--border);
+        box-shadow: 0 14px 38px rgba(15, 23, 42, 0.08);
+        font-size:12px; color: var(--text-strong);
+        pointer-events:none;
+        white-space:nowrap;
+      `;
+
+      els.hours7.innerHTML = `
+        <div style="position:relative;">
+          <div id="hours7Tip" style="${tooltipStyle}"></div>
+
+          <svg viewBox="0 0 ${W} ${H}" width="100%" height="190" role="img" aria-label="Horas por dia (últimos 7 dias)">
+            <defs>
+              <linearGradient id="barsGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="rgba(244,114,128,.85)"></stop>
+                <stop offset="100%" stop-color="rgba(52,211,153,.80)"></stop>
+              </linearGradient>
+            </defs>
+
+            ${gridLines}
+            ${bars}
+          </svg>
         </div>
       `;
-    }).join('');
-  }
 
-  // Horas por dia
-  function renderHoursLast7Days(last7Days) {
-    if (!els.hours7) return;
+      const tip = document.getElementById('hours7Tip');
+      const wrap = els.hours7.querySelector('div[style*="position:relative"]');
 
-    if (!last7Days || last7Days.length === 0) {
-      els.hours7.innerHTML = `<div class="alert">Sem dados nos últimos 7 dias.</div>`;
-      return;
+      function fmtSeconds(sec){ return secondsToHhMm(sec); }
+
+      els.hours7.querySelectorAll('g.b').forEach(g => {
+        g.addEventListener('mousemove', (ev) => {
+          if (!tip || !wrap) return;
+          const label = g.getAttribute('data-label') || '';
+          const sec = Number(g.getAttribute('data-seconds') || 0);
+          tip.textContent = `${label} • ${fmtSeconds(sec)}`;
+
+          const r = wrap.getBoundingClientRect();
+          const x = ev.clientX - r.left + 12;
+          const y = ev.clientY - r.top - 36;
+
+          tip.style.transform = `translate(${x}px, ${Math.max(6,y)}px)`;
+        });
+
+        g.addEventListener('mouseleave', () => {
+          if (!tip) return;
+          tip.style.transform = `translate(-9999px,-9999px)`;
+        });
+      });
     }
 
-    const normalized = last7Days.map(x => {
-      const d = new Date(x.day + "T00:00:00");
-      const label = isNaN(d.getTime())
-        ? String(x.day)
-        : `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
-      return { label, seconds: Number(x.totalSeconds ?? 0) };
+    // Delete sessão (delegação)
+    els.sessionList?.addEventListener('click', async (ev) => {
+      const btn = ev.target?.closest?.('.btnDelSession');
+      if (!btn) return;
+
+      const id = btn.getAttribute('data-id');
+      if (!id) return;
+
+      if (!confirm('Excluir esta sessão?')) return;
+
+      try {
+        setLoading(true);
+        await apiPost(endpoints.deleteSession, { sessionId: id });
+        await reloadDashboardState();
+        showToast('Sessão excluída.');
+      } catch (e) {
+        showToast(e.message || 'Erro ao excluir sessão.');
+        try { await reloadDashboardState(); } catch {}
+      } finally {
+        setLoading(false);
+      }
     });
 
-    const maxSeconds = Math.max(...normalized.map(x => x.seconds), 0);
+    // Delete projeto
+    els.btnDeleteProject?.addEventListener('click', async () => {
+      const projectId = getSelectedProjectId();
+      if (!projectId) return;
 
-    const W = 560;
-    const H = 190;
-    const padL = 18;
-    const padR = 18;
-    const padT = 14;
-    const padB = 34;
+      if (!confirm('Excluir este projeto?')) return;
 
-    const chartW = W - padL - padR;
-    const chartH = H - padT - padB;
+      try {
+        setLoading(true);
 
-    const n = normalized.length;
-    const gap = 10;
-    const barW = Math.floor((chartW - gap * (n - 1)) / n);
-    const baseY = padT + chartH;
+        await apiPost(endpoints.deleteProject, { projectId });
 
-    function barHeight(seconds) {
-      if (maxSeconds <= 0) return 2;
-      const h = Math.round((seconds / maxSeconds) * (chartH - 10));
-      return Math.max(2, h);
-    }
+        const st = await apiGet(endpoints.dashboardState);
+        renderState(st);
 
-    const gridLines = [0.25, 0.5, 0.75].map(p => {
-      const y = padT + chartH - Math.round(p * (chartH - 10));
-      return `<line x1="${padL}" x2="${W - padR}" y1="${y}" y2="${y}"
-                   stroke="rgba(236,234,228,.75)" stroke-dasharray="4 6" />`;
-    }).join('');
-
-    const bars = normalized.map((x, i) => {
-      const xPos = padL + i * (barW + gap);
-      const h = barHeight(x.seconds);
-      const yPos = baseY - h;
-
-      return `
-        <g class="b" data-label="${escapeHtml(x.label)}" data-seconds="${x.seconds}">
-          <rect x="${xPos}" y="${yPos}" width="${barW}" height="${h}" rx="10" fill="url(#barsGrad)"></rect>
-          <rect x="${xPos}" y="${baseY}" width="${barW}" height="1" rx="1" fill="rgba(236,234,228,.9)"></rect>
-
-          <text x="${xPos + barW/2}" y="${H - 12}" text-anchor="middle"
-                font-size="11" fill="rgba(148,163,184,.95)" font-weight="520">
-            ${escapeHtml(x.label)}
-          </text>
-        </g>
-      `;
-    }).join('');
-
-    const tooltipStyle = `
-      position:absolute; left:0; top:0; transform:translate(-9999px,-9999px);
-      padding:8px 10px; border-radius:12px;
-      background: rgba(255,255,255,.92);
-      border: 1px solid var(--border);
-      box-shadow: 0 14px 38px rgba(15, 23, 42, 0.08);
-      font-size:12px; color: var(--text-strong);
-      pointer-events:none;
-      white-space:nowrap;
-    `;
-
-    els.hours7.innerHTML = `
-      <div style="position:relative;">
-        <div id="hours7Tip" style="${tooltipStyle}"></div>
-
-        <svg viewBox="0 0 ${W} ${H}" width="100%" height="190" role="img" aria-label="Horas por dia (últimos 7 dias)">
-          <defs>
-            <linearGradient id="barsGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="rgba(244,114,128,.85)"></stop>
-              <stop offset="100%" stop-color="rgba(52,211,153,.80)"></stop>
-            </linearGradient>
-          </defs>
-
-          ${gridLines}
-          ${bars}
-        </svg>
-      </div>
-    `;
-
-    const tip = document.getElementById('hours7Tip');
-    const wrap = els.hours7.querySelector('div[style*="position:relative"]');
-
-    function fmtSeconds(sec){ return secondsToHhMm(sec); }
-
-    els.hours7.querySelectorAll('g.b').forEach(g => {
-      g.addEventListener('mousemove', (ev) => {
-        if (!tip || !wrap) return;
-        const label = g.getAttribute('data-label') || '';
-        const sec = Number(g.getAttribute('data-seconds') || 0);
-        tip.textContent = `${label} • ${fmtSeconds(sec)}`;
-
-        const r = wrap.getBoundingClientRect();
-        const x = ev.clientX - r.left + 12;
-        const y = ev.clientY - r.top - 36;
-
-        tip.style.transform = `translate(${x}px, ${Math.max(6,y)}px)`;
-      });
-
-      g.addEventListener('mouseleave', () => {
-        if (!tip) return;
-        tip.style.transform = `translate(-9999px,-9999px)`;
-      });
+        showToast('Projeto excluído.');
+      } catch (e) {
+        showToast(e.message || 'Erro ao excluir projeto.');
+        try { await reloadDashboardState(); } catch {}
+      } finally {
+        setLoading(false);
+        setDeleteButtonState(false);
+      }
     });
-  }
 
-  // Delete sessão (delegação)
-  els.sessionList?.addEventListener('click', async (ev) => {
-    const btn = ev.target?.closest?.('.btnDelSession');
-    if (!btn) return;
-
-    const id = btn.getAttribute('data-id');
-    if (!id) return;
-
-    if (!confirm('Excluir esta sessão?')) return;
-
-    try {
-      setLoading(true);
-      await apiPost(endpoints.deleteSession, { sessionId: id });
-      await reloadDashboardState();
-      showToast('Sessão excluída.');
-    } catch (e) {
-      showToast(e.message || 'Erro ao excluir sessão.');
-      try { await reloadDashboardState(); } catch {}
-    } finally {
-      setLoading(false);
+    function renderTodayAllSeconds(totalSeconds){
+      const txt = secondsToHhMm(totalSeconds ?? 0);
+      if (els.chipTodayAll) els.chipTodayAll.textContent = txt;
     }
-  });
 
-  // Delete projeto
-  els.btnDeleteProject?.addEventListener('click', async () => {
-    const projectId = getSelectedProjectId();
-    if (!projectId) return;
+    function renderTotals(st){
+      const weekTxt = secondsToHhMm(st.weekTotalSeconds ?? 0);
+      const todayTxt = secondsToHhMm(st.todayTotalSeconds ?? 0);
 
-    if (!confirm('Excluir este projeto?')) return;
+      // UI atual (sem quebrar)
+      if (els.chipWeekTotal) els.chipWeekTotal.textContent = weekTxt;
+      if (els.weekTotal) els.weekTotal.textContent = weekTxt;
+      if (els.todayDone) els.todayDone.textContent = todayTxt;
 
-    try {
-      setLoading(true);
+      if (els.weekDelta) els.weekDelta.textContent = '—';
 
-      await apiPost(endpoints.deleteProject, { projectId });
-
-      // após deletar, força state sem projectId
-      const st = await apiGet(endpoints.dashboardState);
-      renderState(st);
-
-      showToast('Projeto excluído.');
-    } catch (e) {
-      showToast(e.message || 'Erro ao excluir projeto.');
-      try { await reloadDashboardState(); } catch {}
-    } finally {
-      setLoading(false);
-      setDeleteButtonState(false);
-    }
-  });
-
-  function renderTotals(st){
-    const weekTxt = secondsToHhMm(st.weekTotalSeconds ?? 0);
-    const todayTxt = secondsToHhMm(st.todayTotalSeconds ?? 0);
-
-    if (els.chipWeekTotal) els.chipWeekTotal.textContent = weekTxt;
-    if (els.weekTotal) els.weekTotal.textContent = weekTxt;
-    if (els.todayDone) els.todayDone.textContent = todayTxt;
-
-    if (els.weekDelta) els.weekDelta.textContent = '—';
-
-    if (els.chipUpdated) {
+      // updated (chips topo)
       const d = new Date();
-      els.chipUpdated.textContent =
+      const updated =
         `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-    }
-  }
 
-  function renderState(st){
-    renderProjects(st.projects, st.defaultProjectId);
-    renderTotals(st);
-    renderLastSessions(st.lastSessions);
-
-    renderDistributionWeek(st.totalsByProject);
-    renderHoursLast7Days(st.last7Days);
-
-    if (els.chipFocus) {
-      const title =
-        st.defaultProjectTitle ??
-        st.projects?.find(p => p.id === st.defaultProjectId)?.title ??
-        els.chipFocus.textContent ??
-        '—';
-      els.chipFocus.textContent = title;
+      if (els.chipUpdated) els.chipUpdated.textContent = updated;
     }
 
-    const active = st.activeSession;
+    function renderState(st){
+      renderProjects(st.projects, st.defaultProjectId);
+      renderTotals(st);
+      renderLastSessions(st.lastSessions);
 
-    if (!active) {
-      els.btnStart?.classList.remove('d-none');
-      els.btnStop?.classList.add('d-none');
-      els.btnCancel?.classList.add('d-none');
+      renderDistributionWeek(st.totalsByProject);
+      renderHoursLast7Days(st.last7Days);
 
-      if (els.projectSelect) els.projectSelect.disabled = false;
+      if (els.chipFocus) {
+        const title =
+          st.defaultProjectTitle ??
+          st.projects?.find(p => p.id === st.defaultProjectId)?.title ??
+          els.chipFocus.textContent ??
+          '—';
+        els.chipFocus.textContent = title;
+      }
 
-      stopTimerAndReset(true);
-      setStatus('stop');
+      const active = st.activeSession;
+
+      if (!active) {
+        els.btnStart?.classList.remove('d-none');
+        els.btnStop?.classList.add('d-none');
+        els.btnCancel?.classList.add('d-none');
+
+        if (els.projectSelect) els.projectSelect.disabled = false;
+
+        stopTimerAndReset(true);
+        setStatus('stop');
+
+        if (st.activeGoalTargetSeconds && st.activeGoalTargetSeconds > 0) {
+          setRingProgress((st.todayTotalSeconds ?? 0) / st.activeGoalTargetSeconds);
+        } else {
+          setRingProgress(0);
+        }
+
+        setDeleteButtonState(false);
+        return;
+      }
+
+      els.btnStart?.classList.add('d-none');
+      els.btnStop?.classList.remove('d-none');
+      els.btnCancel?.classList.remove('d-none');
+
+      if (els.projectSelect) els.projectSelect.disabled = true;
+
+      setStatus('on');
+      if (active.startTimeUtc) startTimerFromUtc(active.startTimeUtc);
 
       if (st.activeGoalTargetSeconds && st.activeGoalTargetSeconds > 0) {
         setRingProgress((st.todayTotalSeconds ?? 0) / st.activeGoalTargetSeconds);
       } else {
+        setRingProgress(0.85);
+      }
+
+      setDeleteButtonState(false);
+    }
+
+    // ✅ Agora sempre pega:
+    // - estado do projeto selecionado (para cards/listas/graphs)
+    // - estado global (sem projectId) para "Foco hoje" total do dia
+    async function reloadDashboardState(){
+      const projectId = getSelectedProjectId();
+
+      const urlSelected = projectId
+        ? `${endpoints.dashboardState}?projectId=${encodeURIComponent(projectId)}`
+        : endpoints.dashboardState;
+
+      const [stSelected, stAll] = await Promise.all([
+        apiGet(urlSelected),
+        apiGet(endpoints.dashboardState)
+      ]);
+
+      renderState(stSelected);
+      renderTodayAllSeconds(stAll?.todayTotalSeconds ?? 0);
+    }
+
+    // Select: mudar projeto / abrir modal
+    els.projectSelect?.addEventListener('change', async () => {
+      const raw = els.projectSelect?.value;
+
+      if (raw === '__add__') {
+        if (els.projectSelect) els.projectSelect.value = lastValidProjectId || 'null';
+        setDeleteButtonState(false);
+        openProjectModal();
+        return;
+      }
+
+      if (raw && raw !== 'null') lastValidProjectId = raw;
+
+      try {
+        setLoading(true);
+
+        const projectId = getSelectedProjectId();
+        if (!projectId) return;
+
+        await apiPost(endpoints.setDefaultProject, { projectId });
+        await reloadDashboardState();
+
+        showToast('Projeto padrão atualizado.');
+      } catch (e) {
+        showToast(e.message || 'Erro ao trocar projeto.');
+        try { await reloadDashboardState(); } catch {}
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // Criar projeto (modal)
+    function showModalError(msg){
+      if (!modalEls.err) return;
+      modalEls.err.classList.remove('d-none');
+      modalEls.err.innerHTML = `<div class="alert">${escapeHtml(msg)}</div>`;
+    }
+
+    modalEls.btnSave?.addEventListener('click', async () => {
+      try {
+        setLoading(true);
+
+        const title = (modalEls.input?.value || '').trim();
+        if (!title) {
+          showModalError('Informe um nome para o projeto.');
+          return;
+        }
+
+        const created = await apiPost(endpoints.createProject, { title });
+        const newId = created?.id || created?.projectId;
+
+        if (!newId) {
+          showModalError('Projeto criado, mas o backend não retornou o id.');
+          return;
+        }
+
+        await apiPost(endpoints.setDefaultProject, { projectId: newId });
+
+        closeProjectModal();
+        await reloadDashboardState();
+        showToast('Projeto criado.');
+      } catch (e) {
+        showModalError(e.message || 'Erro ao criar projeto.');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    modalEls.input?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') modalEls.btnSave?.click();
+    });
+
+    // Start
+    els.btnStart?.addEventListener('click', async () => {
+      try {
+        setLoading(true);
+
+        const projectId = getSelectedProjectId();
+        if (!projectId) {
+          showToast('Selecione um projeto antes de iniciar.');
+          return;
+        }
+
+        const started = await apiPost(endpoints.startSession, { projectId, goalId: null });
+        if (started?.startTimeUtc) startTimerFromUtc(started.startTimeUtc);
+
+        await reloadDashboardState();
+        showToast('Sessão iniciada.');
+      } catch (e) {
+        showToast(e.message || 'Erro ao iniciar sessão.');
+        try { await reloadDashboardState(); } catch {}
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // Stop
+    els.btnStop?.addEventListener('click', async () => {
+      try {
+        setLoading(true);
+
+        await apiPost(endpoints.stopSession, null);
+        stopTimerAndReset(true);
+
+        await reloadDashboardState();
+        showToast('Sessão finalizada.');
+      } catch (e) {
+        showToast(e.message || 'Erro ao finalizar sessão.');
+        try { await reloadDashboardState(); } catch {}
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // Cancel
+    els.btnCancel?.addEventListener('click', async () => {
+      try {
+        setLoading(true);
+
+        await apiPost(endpoints.cancelSession, null);
+        stopTimerAndReset(true);
+
+        await reloadDashboardState();
+        showToast('Sessão cancelada.');
+      } catch (e) {
+        showToast(e.message || 'Erro ao cancelar sessão.');
+        try { await reloadDashboardState(); } catch {}
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // Boot
+    (async () => {
+      try {
+        setLoading(true);
+        await reloadDashboardState();
+      } catch (e) {
+        showToast(e.message || 'Erro ao carregar dashboard.');
+        stopTimerAndReset(true);
+        setStatus('stop');
         setRingProgress(0);
+      } finally {
+        setLoading(false);
+        setDeleteButtonState(false);
       }
+    })();
 
-      setDeleteButtonState(false);
-      return;
-    }
-
-    els.btnStart?.classList.add('d-none');
-    els.btnStop?.classList.remove('d-none');
-    els.btnCancel?.classList.remove('d-none');
-
-    if (els.projectSelect) els.projectSelect.disabled = true;
-
-    setStatus('on');
-    if (active.startTimeUtc) startTimerFromUtc(active.startTimeUtc);
-
-    if (st.activeGoalTargetSeconds && st.activeGoalTargetSeconds > 0) {
-      setRingProgress((st.todayTotalSeconds ?? 0) / st.activeGoalTargetSeconds);
-    } else {
-      setRingProgress(0.85);
-    }
-
-    setDeleteButtonState(false);
-  }
-
-  async function reloadDashboardState(){
-    const projectId = getSelectedProjectId();
-    const url = projectId
-      ? `${endpoints.dashboardState}?projectId=${encodeURIComponent(projectId)}`
-      : endpoints.dashboardState;
-
-    const st = await apiGet(url);
-    renderState(st);
-  }
-
-  // Select: mudar projeto / abrir modal
-  els.projectSelect?.addEventListener('change', async () => {
-    const raw = els.projectSelect?.value;
-
-    if (raw === '__add__') {
-      if (els.projectSelect) els.projectSelect.value = lastValidProjectId || 'null';
-      setDeleteButtonState(false);
-      openProjectModal();
-      return;
-    }
-
-    if (raw && raw !== 'null') lastValidProjectId = raw;
-
-    try {
-      setLoading(true);
-
-      const projectId = getSelectedProjectId();
-      if (!projectId) return;
-
-      await apiPost(endpoints.setDefaultProject, { projectId });
-      await reloadDashboardState();
-
-      showToast('Projeto padrão atualizado.');
-    } catch (e) {
-      showToast(e.message || 'Erro ao trocar projeto.');
-      try { await reloadDashboardState(); } catch {}
-    } finally {
-      setLoading(false);
-    }
-  });
-
-  // Criar projeto (modal)
-  function showModalError(msg){
-    if (!modalEls.err) return;
-    modalEls.err.classList.remove('d-none');
-    modalEls.err.innerHTML = `<div class="alert">${escapeHtml(msg)}</div>`;
-  }
-
-  modalEls.btnSave?.addEventListener('click', async () => {
-    try {
-      setLoading(true);
-
-      const title = (modalEls.input?.value || '').trim();
-      if (!title) {
-        showModalError('Informe um nome para o projeto.');
-        return;
-      }
-
-      const created = await apiPost(endpoints.createProject, { title });
-      const newId = created?.id || created?.projectId;
-
-      if (!newId) {
-        showModalError('Projeto criado, mas o backend não retornou o id.');
-        return;
-      }
-
-      await apiPost(endpoints.setDefaultProject, { projectId: newId });
-
-      closeProjectModal();
-      await reloadDashboardState();
-      showToast('Projeto criado.');
-    } catch (e) {
-      showModalError(e.message || 'Erro ao criar projeto.');
-    } finally {
-      setLoading(false);
-    }
-  });
-
-  modalEls.input?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') modalEls.btnSave?.click();
-  });
-
-  // Start
-  els.btnStart?.addEventListener('click', async () => {
-    try {
-      setLoading(true);
-
-      const projectId = getSelectedProjectId();
-      if (!projectId) {
-        showToast('Selecione um projeto antes de iniciar.');
-        return;
-      }
-
-      const started = await apiPost(endpoints.startSession, { projectId, goalId: null });
-      if (started?.startTimeUtc) startTimerFromUtc(started.startTimeUtc);
-
-      await reloadDashboardState();
-      showToast('Sessão iniciada.');
-    } catch (e) {
-      showToast(e.message || 'Erro ao iniciar sessão.');
-      try { await reloadDashboardState(); } catch {}
-    } finally {
-      setLoading(false);
-    }
-  });
-
-  // Stop
-  els.btnStop?.addEventListener('click', async () => {
-    try {
-      setLoading(true);
-
-      await apiPost(endpoints.stopSession, null);
-      stopTimerAndReset(true);
-
-      await reloadDashboardState();
-      showToast('Sessão finalizada.');
-    } catch (e) {
-      showToast(e.message || 'Erro ao finalizar sessão.');
-      try { await reloadDashboardState(); } catch {}
-    } finally {
-      setLoading(false);
-    }
-  });
-
-  // Cancel
-  els.btnCancel?.addEventListener('click', async () => {
-    try {
-      setLoading(true);
-
-      await apiPost(endpoints.cancelSession, null);
-      stopTimerAndReset(true);
-
-      await reloadDashboardState();
-      showToast('Sessão cancelada.');
-    } catch (e) {
-      showToast(e.message || 'Erro ao cancelar sessão.');
-      try { await reloadDashboardState(); } catch {}
-    } finally {
-      setLoading(false);
-    }
-  });
-
-  // Boot
-  (async () => {
-    try {
-      setLoading(true);
-      await reloadDashboardState();
-    } catch (e) {
-      showToast(e.message || 'Erro ao carregar dashboard.');
-      stopTimerAndReset(true);
-      setStatus('stop');
-      setRingProgress(0);
-    } finally {
-      setLoading(false);
-      setDeleteButtonState(false);
-    }
   })();
-
-})();
-</script>
+  </script>
 </body>
 </html>
